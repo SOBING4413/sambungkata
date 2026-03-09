@@ -14,50 +14,84 @@ local Prefix2 = {}
 local CurrentLetter = nil
 local Enabled = false
 local Ready = false
+local Options = {}
 
 --------------------------------------------------
 -- UI
 --------------------------------------------------
 
-local gui = Instance.new("ScreenGui", PlayerGui)
+local gui = Instance.new("ScreenGui",PlayerGui)
 gui.ResetOnSpawn = false
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0,240,0,95)
-frame.Position = UDim2.new(0,20,0.5,-45)
-frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+local frame = Instance.new("Frame",gui)
+frame.Size = UDim2.new(0,270,0,170)
+frame.Position = UDim2.new(0,20,0.5,-85)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 frame.BorderSizePixel = 0
 frame.Active = true
 frame.Draggable = true
 
-Instance.new("UICorner",frame)
+Instance.new("UICorner",frame).CornerRadius = UDim.new(0,10)
 
 local title = Instance.new("TextLabel",frame)
-title.Size = UDim2.new(1,0,0,25)
+title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
 title.Text = "Sambung Kata Helper"
-title.TextColor3 = Color3.new(1,1,1)
-title.TextScaled = true
 title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+title.TextColor3 = Color3.fromRGB(255,255,255)
 
 local toggle = Instance.new("TextButton",frame)
-toggle.Size = UDim2.new(0.35,0,0,28)
-toggle.Position = UDim2.new(0.05,0,0,35)
+toggle.Size = UDim2.new(0,70,0,25)
+toggle.Position = UDim2.new(1,-80,0,3)
 toggle.Text = "OFF"
-toggle.TextScaled = true
 toggle.Font = Enum.Font.GothamBold
+toggle.TextSize = 13
 toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
 toggle.TextColor3 = Color3.new(1,1,1)
 
-local label = Instance.new("TextLabel",frame)
-label.Size = UDim2.new(0.9,0,0,25)
-label.Position = UDim2.new(0.05,0,0,65)
-label.BackgroundTransparency = 1
-label.Text = "Next Word : ..."
-label.TextColor3 = Color3.fromRGB(200,200,200)
-label.TextScaled = true
-label.Font = Enum.Font.Gotham
-label.TextXAlignment = Enum.TextXAlignment.Left
+Instance.new("UICorner",toggle)
+
+local prefixLabel = Instance.new("TextLabel",frame)
+prefixLabel.Size = UDim2.new(1,-20,0,20)
+prefixLabel.Position = UDim2.new(0,10,0,35)
+prefixLabel.BackgroundTransparency = 1
+prefixLabel.Text = "Prefix : ..."
+prefixLabel.Font = Enum.Font.Gotham
+prefixLabel.TextSize = 14
+prefixLabel.TextColor3 = Color3.fromRGB(200,200,200)
+prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local listFrame = Instance.new("Frame",frame)
+listFrame.Size = UDim2.new(1,-20,0,100)
+listFrame.Position = UDim2.new(0,10,0,60)
+listFrame.BackgroundTransparency = 1
+
+local layout = Instance.new("UIListLayout",listFrame)
+layout.Padding = UDim.new(0,5)
+
+local buttons = {}
+
+for i=1,5 do
+
+    local btn = Instance.new("TextButton",listFrame)
+
+    btn.Size = UDim2.new(1,0,0,18)
+    btn.Text = "..."
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 13
+    btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    btn.TextColor3 = Color3.fromRGB(230,230,230)
+
+    Instance.new("UICorner",btn)
+
+    table.insert(buttons,btn)
+
+end
+
+--------------------------------------------------
+-- TOGGLE
+--------------------------------------------------
 
 toggle.MouseButton1Click:Connect(function()
 
@@ -69,7 +103,6 @@ toggle.MouseButton1Click:Connect(function()
     else
         toggle.Text = "OFF"
         toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
-        label.Text = "Next Word : ..."
     end
 
 end)
@@ -89,16 +122,8 @@ task.spawn(function()
     if ok then
         text = res
     else
-        local ok2,res2 = pcall(function()
-            return readfile("kbbi.txt")
-        end)
-
-        if ok2 then
-            text = res2
-        else
-            warn("Wordlist gagal load")
-            return
-        end
+        warn("Failed load github wordlist")
+        return
     end
 
     for word in string.gmatch(text,"[^\r\n]+") do
@@ -126,46 +151,80 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- FIND WORD
+-- FIND OPTIONS
 --------------------------------------------------
 
-local function FindWord(prefix)
+local function FindOptions(prefix)
 
     prefix = string.lower(prefix)
 
+    local list
+
     if #prefix >= 2 then
-
-        local p = Prefix2[string.sub(prefix,1,2)]
-
-        if p then
-            return p[math.random(#p)]
-        end
-
+        list = Prefix2[string.sub(prefix,1,2)]
     end
 
-    local p = Prefix1[string.sub(prefix,1,1)]
+    if not list then
+        list = Prefix1[string.sub(prefix,1,1)]
+    end
 
-    if p then
-        return p[math.random(#p)]
+    if not list then return end
+
+    local results = {}
+
+    for i=1,5 do
+        table.insert(results,list[math.random(#list)])
+    end
+
+    return results
+
+end
+
+--------------------------------------------------
+-- UPDATE UI
+--------------------------------------------------
+
+local function UpdatePreview()
+
+    if not Ready then return end
+    if not CurrentLetter then return end
+
+    Options = FindOptions(CurrentLetter)
+
+    if not Options then return end
+
+    prefixLabel.Text = "Prefix : "..CurrentLetter
+
+    for i,btn in ipairs(buttons) do
+        btn.Text = Options[i] or "..."
     end
 
 end
 
 --------------------------------------------------
--- UPDATE PREVIEW
+-- BUTTON CLICK
 --------------------------------------------------
 
-local function UpdatePreview()
+for i,btn in ipairs(buttons) do
 
-    if not Enabled then return end
-    if not Ready then return end
-    if not CurrentLetter then return end
+    btn.MouseButton1Click:Connect(function()
 
-    local word = FindWord(CurrentLetter)
+        if not Enabled then return end
+        if not Options[i] then return end
 
-    if word then
-        label.Text = "Next Word : "..word
-    end
+        local word = Options[i]
+
+        local box = player.PlayerGui:FindFirstChild("MatchUI",true)
+
+        if box then
+            local input = box:FindFirstChildWhichIsA("TextBox",true)
+
+            if input then
+                input.Text = word
+            end
+        end
+
+    end)
 
 end
 
@@ -178,17 +237,12 @@ MatchUI.OnClientEvent:Connect(function(event,data)
     if event == "UpdateServerLetter" then
 
         CurrentLetter = tostring(data)
-        print("Prefix:",CurrentLetter)
 
         UpdatePreview()
 
     elseif event == "EndTurn" then
 
         CurrentLetter = nil
-
-        if Enabled then
-            label.Text = "Next Word : ..."
-        end
 
     end
 
