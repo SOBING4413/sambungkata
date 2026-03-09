@@ -40,7 +40,7 @@ Instance.new("UICorner",Frame)
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1,0,0,25)
 Title.BackgroundTransparency = 1
-Title.Text = "Auto Sambung Kata"
+Title.Text = "ExterFrameworked | Sobing4413"
 Title.TextColor3 = Color3.new(1,1,1)
 Title.TextScaled = true
 Title.Font = Enum.Font.GothamBold
@@ -258,3 +258,4 @@ MatchUI.OnClientEvent:Connect(function(event,data)
 	end
 
 end)
+
