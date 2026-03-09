@@ -33,17 +33,21 @@ frame.Draggable = true
 
 Instance.new("UICorner",frame).CornerRadius = UDim.new(0,10)
 
+-- title
 local title = Instance.new("TextLabel",frame)
-title.Size = UDim2.new(1,0,0,30)
+title.Size = UDim2.new(1,-90,0,30)
+title.Position = UDim2.new(0,10,0,0)
 title.BackgroundTransparency = 1
 title.Text = "Sambung Kata Helper"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 16
 title.TextColor3 = Color3.fromRGB(255,255,255)
+title.TextXAlignment = Enum.TextXAlignment.Left
 
+-- toggle
 local toggle = Instance.new("TextButton",frame)
 toggle.Size = UDim2.new(0,70,0,25)
-toggle.Position = UDim2.new(1,-80,0,3)
+toggle.Position = UDim2.new(1,-75,0,3)
 toggle.Text = "OFF"
 toggle.Font = Enum.Font.GothamBold
 toggle.TextSize = 13
@@ -52,6 +56,7 @@ toggle.TextColor3 = Color3.new(1,1,1)
 
 Instance.new("UICorner",toggle)
 
+-- prefix label
 local prefixLabel = Instance.new("TextLabel",frame)
 prefixLabel.Size = UDim2.new(1,-20,0,20)
 prefixLabel.Position = UDim2.new(0,10,0,35)
@@ -62,6 +67,7 @@ prefixLabel.TextSize = 14
 prefixLabel.TextColor3 = Color3.fromRGB(200,200,200)
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
 
+-- list frame
 local listFrame = Instance.new("Frame",frame)
 listFrame.Size = UDim2.new(1,-20,0,100)
 listFrame.Position = UDim2.new(0,10,0,60)
@@ -103,6 +109,12 @@ toggle.MouseButton1Click:Connect(function()
     else
         toggle.Text = "OFF"
         toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
+
+        prefixLabel.Text = "Prefix : ..."
+
+        for _,btn in ipairs(buttons) do
+            btn.Text = "..."
+        end
     end
 
 end)
@@ -181,10 +193,15 @@ local function FindOptions(prefix)
 end
 
 --------------------------------------------------
--- UPDATE UI
+-- UPDATE PREVIEW
 --------------------------------------------------
 
 local function UpdatePreview()
+
+    if not Enabled then
+        prefixLabel.Text = "Prefix : ..."
+        return
+    end
 
     if not Ready then return end
     if not CurrentLetter then return end
@@ -243,6 +260,10 @@ MatchUI.OnClientEvent:Connect(function(event,data)
     elseif event == "EndTurn" then
 
         CurrentLetter = nil
+
+        if Enabled then
+            prefixLabel.Text = "Prefix : ..."
+        end
 
     end
 
