@@ -23,8 +23,8 @@ local gui = Instance.new("ScreenGui",PlayerGui)
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame",gui)
-frame.Size = UDim2.new(0,270,0,160)
-frame.Position = UDim2.new(0,20,0.5,-80)
+frame.Size = UDim2.new(0,270,0,200)
+frame.Position = UDim2.new(0,20,0.5,-100)
 frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 frame.BorderSizePixel = 0
 frame.Active = true
@@ -51,7 +51,7 @@ prefixLabel.TextColor3 = Color3.fromRGB(200,200,200)
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 local listFrame = Instance.new("Frame",frame)
-listFrame.Size = UDim2.new(1,-20,0,100)
+listFrame.Size = UDim2.new(1,-20,0,120)
 listFrame.Position = UDim2.new(0,10,0,60)
 listFrame.BackgroundTransparency = 1
 
@@ -64,7 +64,7 @@ for i=1,5 do
 
     local btn = Instance.new("TextButton",listFrame)
 
-    btn.Size = UDim2.new(1,0,0,18)
+    btn.Size = UDim2.new(1,0,0,20)
     btn.Text = "..."
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 13
