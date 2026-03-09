@@ -23,8 +23,8 @@ local gui = Instance.new("ScreenGui",PlayerGui)
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame",gui)
-frame.Size = UDim2.new(0,340,0,260)
-frame.Position = UDim2.new(0,30,0.5,-130)
+frame.Size = UDim2.new(0,340,0,280)
+frame.Position = UDim2.new(0,30,0.5,-140)
 frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 frame.BorderSizePixel = 0
 frame.Active = true
@@ -36,7 +36,7 @@ Instance.new("UICorner",frame).CornerRadius = UDim.new(0,12)
 local title = Instance.new("TextLabel",frame)
 title.Size = UDim2.new(1,0,0,40)
 title.BackgroundTransparency = 1
-title.Text = "Sambung Kata Helper"
+title.Text = "KBBI BY.Sobing4413"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 20
 title.TextColor3 = Color3.fromRGB(255,255,255)
@@ -46,21 +46,20 @@ local prefixLabel = Instance.new("TextLabel",frame)
 prefixLabel.Size = UDim2.new(1,-20,0,25)
 prefixLabel.Position = UDim2.new(0,10,0,45)
 prefixLabel.BackgroundTransparency = 1
-prefixLabel.Text = "Prefix : ..."
+prefixLabel.Text = "Awalan : ..."
 prefixLabel.Font = Enum.Font.Gotham
 prefixLabel.TextSize = 17
 prefixLabel.TextColor3 = Color3.fromRGB(200,200,200)
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- list container
+-- list
 local listFrame = Instance.new("Frame",frame)
-listFrame.Size = UDim2.new(1,-20,1,-85)
+listFrame.Size = UDim2.new(1,-20,1,-90)
 listFrame.Position = UDim2.new(0,10,0,80)
 listFrame.BackgroundTransparency = 1
 
 local layout = Instance.new("UIListLayout",listFrame)
-layout.Padding = UDim.new(0,8)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0,6)
 
 local buttons = {}
 
@@ -68,10 +67,10 @@ for i=1,5 do
 
     local btn = Instance.new("TextButton",listFrame)
 
-    btn.Size = UDim2.new(1,0,0,30)
+    btn.Size = UDim2.new(1,0,0,32)
     btn.Text = "..."
     btn.Font = Enum.Font.Gotham
-    btn.TextSize = 16
+    btn.TextSize = 17
     btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
     btn.TextColor3 = Color3.fromRGB(230,230,230)
 
@@ -125,6 +124,22 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
+-- LETTER DIFFICULTY
+--------------------------------------------------
+
+local HardLetters = {
+    q=10,x=9,z=8,v=7,f=6,w=5,y=4,k=3,b=2,p=1
+}
+
+local function Difficulty(word)
+
+    local last = string.sub(word,-1)
+
+    return HardLetters[last] or 0
+
+end
+
+--------------------------------------------------
 -- FIND OPTIONS
 --------------------------------------------------
 
@@ -146,11 +161,21 @@ local function FindOptions(prefix)
 
     local results = {}
 
-    for i=1,5 do
+    for i=1,20 do
         table.insert(results,list[math.random(#list)])
     end
 
-    return results
+    table.sort(results,function(a,b)
+        return Difficulty(a) < Difficulty(b)
+    end)
+
+    local final = {}
+
+    for i=1,5 do
+        final[i] = results[i]
+    end
+
+    return final
 
 end
 
@@ -167,7 +192,7 @@ local function UpdatePreview()
 
     if not Options then return end
 
-    prefixLabel.Text = "Prefix : "..CurrentLetter
+    prefixLabel.Text = "Awalan : "..CurrentLetter
 
     for i,btn in ipairs(buttons) do
         btn.Text = Options[i] or "..."
@@ -212,15 +237,6 @@ MatchUI.OnClientEvent:Connect(function(event,data)
         CurrentLetter = tostring(data)
 
         UpdatePreview()
-
-    elseif event == "EndTurn" then
-
-        CurrentLetter = nil
-        prefixLabel.Text = "Prefix : ..."
-
-        for _,btn in ipairs(buttons) do
-            btn.Text = "..."
-        end
 
     end
 
