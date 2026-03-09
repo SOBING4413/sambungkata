@@ -1,3 +1,4 @@
+```lua
 local cloneref = cloneref or function(obj) return obj end
 local replicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
 local Players = game:GetService("Players")
@@ -17,44 +18,75 @@ local CurrentLetter = nil
 local Answered = false
 local Ready = false
 local Enabled = true
+local PendingWord = "..."
 
+--------------------------------------------------
 -- UI
+--------------------------------------------------
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "SambungKataUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = PlayerGui
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0,150,0,60)
-Frame.Position = UDim2.new(0,20,0.5,-30)
-Frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Frame.Size = UDim2.new(0,220,0,90)
+Frame.Position = UDim2.new(0,20,0.5,-45)
+Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 Frame.BorderSizePixel = 0
 Frame.Active = true
 Frame.Draggable = true
 Frame.Parent = ScreenGui
 
+local UICorner = Instance.new("UICorner",Frame)
+UICorner.CornerRadius = UDim.new(0,8)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1,0,0,25)
+Title.BackgroundTransparency = 1
+Title.Text = "Sambung Kata Auto"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBold
+Title.Parent = Frame
+
 local Button = Instance.new("TextButton")
-Button.Size = UDim2.new(1,-20,1,-20)
-Button.Position = UDim2.new(0,10,0,10)
+Button.Size = UDim2.new(0.4,0,0,25)
+Button.Position = UDim2.new(0.05,0,0,35)
 Button.BackgroundColor3 = Color3.fromRGB(0,170,0)
-Button.Text = "AUTO : ON"
+Button.Text = "ON"
 Button.TextColor3 = Color3.new(1,1,1)
 Button.TextScaled = true
+Button.Font = Enum.Font.GothamBold
 Button.Parent = Frame
+
+local WordLabel = Instance.new("TextLabel")
+WordLabel.Size = UDim2.new(0.9,0,0,25)
+WordLabel.Position = UDim2.new(0.05,0,0,60)
+WordLabel.BackgroundTransparency = 1
+WordLabel.Text = "Next Word : ..."
+WordLabel.TextColor3 = Color3.fromRGB(200,200,200)
+WordLabel.TextScaled = true
+WordLabel.Font = Enum.Font.Gotham
+WordLabel.TextXAlignment = Enum.TextXAlignment.Left
+WordLabel.Parent = Frame
 
 Button.MouseButton1Click:Connect(function()
 	Enabled = not Enabled
-	
+
 	if Enabled then
-		Button.Text = "AUTO : ON"
+		Button.Text = "ON"
 		Button.BackgroundColor3 = Color3.fromRGB(0,170,0)
 	else
-		Button.Text = "AUTO : OFF"
+		Button.Text = "OFF"
 		Button.BackgroundColor3 = Color3.fromRGB(170,0,0)
 	end
 end)
 
+--------------------------------------------------
 -- Load Wordlist
+--------------------------------------------------
+
 task.spawn(function()
 
 	if not shared.kbbiwords then
@@ -90,6 +122,10 @@ task.spawn(function()
 	Ready = true
 end)
 
+--------------------------------------------------
+-- Find Word
+--------------------------------------------------
+
 local function FindWord(letter)
 
 	local pool = Prefix[letter]
@@ -97,6 +133,7 @@ local function FindWord(letter)
 
 	for i = 1,100 do
 		local w = pool[math.random(#pool)]
+
 		if not Used[w] then
 			return w
 		end
@@ -104,6 +141,10 @@ local function FindWord(letter)
 
 	return nil
 end
+
+--------------------------------------------------
+-- Typing Simulation
+--------------------------------------------------
 
 local function TypeWord(word,already)
 
@@ -127,12 +168,19 @@ local function TypeWord(word,already)
 
 end
 
+--------------------------------------------------
+-- Answer System
+--------------------------------------------------
+
 local function DoAnswer()
 
 	if not CurrentLetter or not Enabled then return end
 
 	local word = FindWord(CurrentLetter)
 	if not word then return end
+
+	PendingWord = word
+	WordLabel.Text = "Next Word : "..word
 
 	Used[word] = true
 
@@ -169,6 +217,10 @@ local function Answer()
 
 end
 
+--------------------------------------------------
+-- Game Events
+--------------------------------------------------
+
 MatchUI.OnClientEvent:Connect(function(event,data)
 
 	if event == "UpdateServerLetter" and type(data) == "string" then
@@ -193,7 +245,9 @@ MatchUI.OnClientEvent:Connect(function(event,data)
 
 		CurrentLetter = nil
 		Answered = false
+		WordLabel.Text = "Next Word : ..."
 
 	end
 
 end)
+```
