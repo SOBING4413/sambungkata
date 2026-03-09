@@ -12,7 +12,6 @@ local Prefix1 = {}
 local Prefix2 = {}
 
 local CurrentLetter = nil
-local Enabled = false
 local Ready = false
 local Options = {}
 
@@ -24,8 +23,8 @@ local gui = Instance.new("ScreenGui",PlayerGui)
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame",gui)
-frame.Size = UDim2.new(0,270,0,170)
-frame.Position = UDim2.new(0,20,0.5,-85)
+frame.Size = UDim2.new(0,270,0,160)
+frame.Position = UDim2.new(0,20,0.5,-80)
 frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 frame.BorderSizePixel = 0
 frame.Active = true
@@ -33,30 +32,14 @@ frame.Draggable = true
 
 Instance.new("UICorner",frame).CornerRadius = UDim.new(0,10)
 
--- title
 local title = Instance.new("TextLabel",frame)
-title.Size = UDim2.new(1,-90,0,30)
-title.Position = UDim2.new(0,10,0,0)
+title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
 title.Text = "Sambung Kata Helper"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 16
 title.TextColor3 = Color3.fromRGB(255,255,255)
-title.TextXAlignment = Enum.TextXAlignment.Left
 
--- toggle
-local toggle = Instance.new("TextButton",frame)
-toggle.Size = UDim2.new(0,70,0,25)
-toggle.Position = UDim2.new(1,-75,0,3)
-toggle.Text = "OFF"
-toggle.Font = Enum.Font.GothamBold
-toggle.TextSize = 13
-toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
-toggle.TextColor3 = Color3.new(1,1,1)
-
-Instance.new("UICorner",toggle)
-
--- prefix label
 local prefixLabel = Instance.new("TextLabel",frame)
 prefixLabel.Size = UDim2.new(1,-20,0,20)
 prefixLabel.Position = UDim2.new(0,10,0,35)
@@ -67,7 +50,6 @@ prefixLabel.TextSize = 14
 prefixLabel.TextColor3 = Color3.fromRGB(200,200,200)
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- list frame
 local listFrame = Instance.new("Frame",frame)
 listFrame.Size = UDim2.new(1,-20,0,100)
 listFrame.Position = UDim2.new(0,10,0,60)
@@ -94,30 +76,6 @@ for i=1,5 do
     table.insert(buttons,btn)
 
 end
-
---------------------------------------------------
--- TOGGLE
---------------------------------------------------
-
-toggle.MouseButton1Click:Connect(function()
-
-    Enabled = not Enabled
-
-    if Enabled then
-        toggle.Text = "ON"
-        toggle.BackgroundColor3 = Color3.fromRGB(0,170,0)
-    else
-        toggle.Text = "OFF"
-        toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
-
-        prefixLabel.Text = "Prefix : ..."
-
-        for _,btn in ipairs(buttons) do
-            btn.Text = "..."
-        end
-    end
-
-end)
 
 --------------------------------------------------
 -- LOAD WORDLIST
@@ -193,15 +151,10 @@ local function FindOptions(prefix)
 end
 
 --------------------------------------------------
--- UPDATE PREVIEW
+-- UPDATE UI
 --------------------------------------------------
 
 local function UpdatePreview()
-
-    if not Enabled then
-        prefixLabel.Text = "Prefix : ..."
-        return
-    end
 
     if not Ready then return end
     if not CurrentLetter then return end
@@ -226,7 +179,6 @@ for i,btn in ipairs(buttons) do
 
     btn.MouseButton1Click:Connect(function()
 
-        if not Enabled then return end
         if not Options[i] then return end
 
         local word = Options[i]
@@ -260,9 +212,10 @@ MatchUI.OnClientEvent:Connect(function(event,data)
     elseif event == "EndTurn" then
 
         CurrentLetter = nil
+        prefixLabel.Text = "Prefix : ..."
 
-        if Enabled then
-            prefixLabel.Text = "Prefix : ..."
+        for _,btn in ipairs(buttons) do
+            btn.Text = "..."
         end
 
     end
