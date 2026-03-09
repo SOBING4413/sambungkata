@@ -12,7 +12,6 @@ local Prefix = {}
 local CurrentLetter = nil
 local Answered = false
 local Ready = false
-local Round = 1
 
 task.spawn(function()
 
@@ -54,24 +53,36 @@ local function FindWord(letter)
 	local pool = Prefix[letter]
 	if not pool then return nil end
 
-	for i = 1,#pool do
+	for i = 1,100 do
+
 		local w = pool[math.random(#pool)]
 
 		if not Used[w] then
 			return w
 		end
+
 	end
 
 	return nil
 end
 
-local function Update(word,already)
+local function TypeWord(word,already)
 
 	for i = #already + 1,#word do
 
 		BillboardUpdate:FireServer(string.sub(word,1,i))
 
-		task.wait(math.random(8,18)/100)
+		local delay
+
+		if i <= 2 then
+			delay = math.random(30,45)/100
+		elseif i >= #word - 1 then
+			delay = math.random(45,65)/100
+		else
+			delay = math.random(35,55)/100
+		end
+
+		task.wait(delay)
 
 	end
 
@@ -82,15 +93,19 @@ local function DoAnswer()
 	if not CurrentLetter then return end
 
 	local word = FindWord(CurrentLetter)
-	if not word then return end
+
+	if not word then
+		warn("No word found for:",CurrentLetter)
+		return
+	end
 
 	Used[word] = true
 
-	task.wait(math.random(30,80)/100)
+	task.wait(math.random(100,180)/100)
 
-	Update(word,CurrentLetter)
+	TypeWord(word,CurrentLetter)
 
-	task.wait(math.random(5,15)/100)
+	task.wait(math.random(40,80)/100)
 
 	SubmitWord:FireServer(word)
 
@@ -106,7 +121,7 @@ local function Answer()
 
 		local t = 0
 
-		while not Ready and t < 15 do
+		while not Ready and t < 10 do
 			task.wait(0.5)
 			t += 0.5
 		end
@@ -128,14 +143,15 @@ MatchUI.OnClientEvent:Connect(function(event,data)
 
 	elseif event == "StartTurn" then
 
-		Round += 1
+		task.wait(math.random(80,140)/100)
+
 		Answered = false
 		Answer()
 
 	elseif event == "Mistake" then
 
 		Answered = false
-		task.wait(0.3)
+		task.wait(math.random(60,120)/100)
 		Answer()
 
 	elseif event == "EndTurn" then
