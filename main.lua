@@ -121,40 +121,59 @@ end
 
 task.spawn(function()
 
-	local text
+	local urls = {
 
-	local ok,res = pcall(function()
-		return game:HttpGet("https://raw.githubusercontent.com/SOBING4413/sambungkata/main/dependescis/kbbi.txt")
-	end)
+		-- wordlist kamu
+		"https://raw.githubusercontent.com/SOBING4413/sambungkata/main/dependescis/kbbi.txt",
 
-	if ok then
-		text = res
-	else
-		warn("Failed load github wordlist")
-		return
-	end
+		-- wordlist indonesia besar
+		"https://raw.githubusercontent.com/words/an-array-of-indonesian-words/master/words.txt",
 
-	for word in string.gmatch(text,"[^\r\n]+") do
+		-- frequency words indonesia
+		"https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/id/id_50k.txt"
 
-		local w = string.lower(word)
+	}
 
-		if string.match(w,"^[a-z]+$") and #w >= 3 then
+	local Used = {}
 
-			local p1 = string.sub(w,1,1)
-			local p2 = string.sub(w,1,2)
+	for _,url in ipairs(urls) do
 
-			Prefix1[p1] = Prefix1[p1] or {}
-			table.insert(Prefix1[p1],w)
+		local ok,res = pcall(function()
+			return game:HttpGet(url)
+		end)
 
-			Prefix2[p2] = Prefix2[p2] or {}
-			table.insert(Prefix2[p2],w)
+		if ok then
 
+			for word in string.gmatch(res,"[^\r\n]+") do
+
+				local w = string.lower(word):gsub("[^a-z]","")
+
+				if #w >= 3 and not Used[w] then
+
+					Used[w] = true
+
+					local p1 = string.sub(w,1,1)
+					local p2 = string.sub(w,1,2)
+
+					Prefix1[p1] = Prefix1[p1] or {}
+					table.insert(Prefix1[p1],w)
+
+					Prefix2[p2] = Prefix2[p2] or {}
+					table.insert(Prefix2[p2],w)
+
+				end
+
+			end
+
+		else
+			warn("Failed load:",url)
 		end
 
 	end
 
 	Ready = true
-	print("Wordlist loaded")
+
+	print("Wordlist loaded | total words:",table.getn(Used))
 
 end)
 
