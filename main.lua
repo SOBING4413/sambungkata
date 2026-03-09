@@ -7,17 +7,13 @@ local PlayerGui = player:WaitForChild("PlayerGui")
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local MatchUI = Remotes:WaitForChild("MatchUI")
-local SubmitWord = Remotes:WaitForChild("SubmitWord")
-local BillboardUpdate = Remotes:WaitForChild("BillboardUpdate")
 
-local Used = {}
 local Prefix1 = {}
 local Prefix2 = {}
 
 local CurrentLetter = nil
 local Enabled = false
 local Ready = false
-local Answered = false
 
 --------------------------------------------------
 -- UI
@@ -39,7 +35,7 @@ Instance.new("UICorner",frame)
 local title = Instance.new("TextLabel",frame)
 title.Size = UDim2.new(1,0,0,25)
 title.BackgroundTransparency = 1
-title.Text = "Auto Sambung Kata"
+title.Text = "Sambung Kata Helper"
 title.TextColor3 = Color3.new(1,1,1)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -73,6 +69,7 @@ toggle.MouseButton1Click:Connect(function()
     else
         toggle.Text = "OFF"
         toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
+        label.Text = "Next Word : ..."
     end
 
 end)
@@ -141,10 +138,7 @@ local function FindWord(prefix)
         local p = Prefix2[string.sub(prefix,1,2)]
 
         if p then
-            for i=1,200 do
-                local w = p[math.random(#p)]
-                if not Used[w] then return w end
-            end
+            return p[math.random(#p)]
         end
 
     end
@@ -152,64 +146,26 @@ local function FindWord(prefix)
     local p = Prefix1[string.sub(prefix,1,1)]
 
     if p then
-        for i=1,200 do
-            local w = p[math.random(#p)]
-            if not Used[w] then return w end
-        end
+        return p[math.random(#p)]
     end
 
 end
 
 --------------------------------------------------
--- TYPE WORD (ANTI DOUBLE)
+-- UPDATE PREVIEW
 --------------------------------------------------
 
-local function TypeWord(word,start)
+local function UpdatePreview()
 
-    start = string.lower(start or "")
-    local skip = #start
-
-    for i = skip + 1,#word do
-
-        local partial = string.sub(word,1,i)
-
-        BillboardUpdate:FireServer(partial)
-
-        task.wait(0.04)
-
-    end
-
-end
-
---------------------------------------------------
--- ANSWER
---------------------------------------------------
-
-local function Answer()
-
-    if not CurrentLetter then return end
+    if not Enabled then return end
     if not Ready then return end
+    if not CurrentLetter then return end
 
     local word = FindWord(CurrentLetter)
-    if not word then return end
 
-    -- preview selalu muncul
-    label.Text = "Next Word : "..word
-
-    -- kalau OFF jangan jawab
-    if not Enabled then return end
-    if Answered then return end
-
-    Answered = true
-    Used[word] = true
-
-    task.wait(math.random(60,120)/100)
-
-    TypeWord(word,CurrentLetter)
-
-    task.wait(0.3)
-
-    SubmitWord:FireServer(word)
+    if word then
+        label.Text = "Next Word : "..word
+    end
 
 end
 
@@ -222,27 +178,17 @@ MatchUI.OnClientEvent:Connect(function(event,data)
     if event == "UpdateServerLetter" then
 
         CurrentLetter = tostring(data)
-        Answered = false
-
         print("Prefix:",CurrentLetter)
 
-        -- update preview langsung
-        Answer()
-
-    elseif event == "StartTurn" then
-
-        task.wait(0.8)
-        Answer()
-
-    elseif event == "Mistake" then
-
-        task.wait(0.7)
-        Answer()
+        UpdatePreview()
 
     elseif event == "EndTurn" then
 
         CurrentLetter = nil
-        label.Text = "Next Word : ..."
+
+        if Enabled then
+            label.Text = "Next Word : ..."
+        end
 
     end
 
