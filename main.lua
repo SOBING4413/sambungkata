@@ -179,31 +179,54 @@ end
 
 local function FindOptions(prefix)
 
-	prefix = string.lower(prefix)
+	prefix = string.lower(prefix):gsub("%s","")
 
 	local list
 
+	-- ambil list sesuai prefix
 	if #prefix >= 2 then
 		list = Prefix2[string.sub(prefix,1,2)]
-	end
-
-	if not list then
+	else
 		list = Prefix1[string.sub(prefix,1,1)]
 	end
 
-	if not list then return end
-
-	local results = {}
-
-	for i=1,80 do
-		table.insert(results,list[math.random(#list)])
+	if not list then
+		return {}
 	end
 
-	table.sort(results,function(a,b)
+	local filtered = {}
+	local used = {}
+
+	for _,word in ipairs(list) do
+
+		-- STRICT PREFIX CHECK
+		if string.sub(word,1,#prefix) == prefix then
+
+			if not used[word] then
+				used[word] = true
+				table.insert(filtered,word)
+			end
+
+		end
+
+	end
+
+	if #filtered == 0 then
+		return {}
+	end
+
+	-- shuffle
+	for i = #filtered,2,-1 do
+		local j = math.random(i)
+		filtered[i],filtered[j] = filtered[j],filtered[i]
+	end
+
+	-- sort difficulty
+	table.sort(filtered,function(a,b)
 		return Difficulty(a) < Difficulty(b)
 	end)
 
-	return results
+	return filtered
 
 end
 
@@ -263,7 +286,7 @@ MatchUI.OnClientEvent:Connect(function(event,data)
 
 	if event == "UpdateServerLetter" then
 
-		CurrentLetter = tostring(data)
+		CurrentLetter = string.lower(tostring(data)):gsub("%s","")
 
 		UpdatePreview()
 
