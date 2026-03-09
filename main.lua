@@ -23,40 +23,44 @@ local gui = Instance.new("ScreenGui",PlayerGui)
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame",gui)
-frame.Size = UDim2.new(0,270,0,200)
-frame.Position = UDim2.new(0,20,0.5,-100)
+frame.Size = UDim2.new(0,340,0,260)
+frame.Position = UDim2.new(0,30,0.5,-130)
 frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 frame.BorderSizePixel = 0
 frame.Active = true
 frame.Draggable = true
 
-Instance.new("UICorner",frame).CornerRadius = UDim.new(0,10)
+Instance.new("UICorner",frame).CornerRadius = UDim.new(0,12)
 
+-- title
 local title = Instance.new("TextLabel",frame)
-title.Size = UDim2.new(1,0,0,30)
+title.Size = UDim2.new(1,0,0,40)
 title.BackgroundTransparency = 1
 title.Text = "Sambung Kata Helper"
 title.Font = Enum.Font.GothamBold
-title.TextSize = 16
+title.TextSize = 20
 title.TextColor3 = Color3.fromRGB(255,255,255)
 
+-- prefix
 local prefixLabel = Instance.new("TextLabel",frame)
-prefixLabel.Size = UDim2.new(1,-20,0,20)
-prefixLabel.Position = UDim2.new(0,10,0,35)
+prefixLabel.Size = UDim2.new(1,-20,0,25)
+prefixLabel.Position = UDim2.new(0,10,0,45)
 prefixLabel.BackgroundTransparency = 1
 prefixLabel.Text = "Prefix : ..."
 prefixLabel.Font = Enum.Font.Gotham
-prefixLabel.TextSize = 14
+prefixLabel.TextSize = 17
 prefixLabel.TextColor3 = Color3.fromRGB(200,200,200)
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
 
+-- list container
 local listFrame = Instance.new("Frame",frame)
-listFrame.Size = UDim2.new(1,-20,0,120)
-listFrame.Position = UDim2.new(0,10,0,60)
+listFrame.Size = UDim2.new(1,-20,1,-85)
+listFrame.Position = UDim2.new(0,10,0,80)
 listFrame.BackgroundTransparency = 1
 
 local layout = Instance.new("UIListLayout",listFrame)
-layout.Padding = UDim.new(0,5)
+layout.Padding = UDim.new(0,8)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local buttons = {}
 
@@ -64,14 +68,14 @@ for i=1,5 do
 
     local btn = Instance.new("TextButton",listFrame)
 
-    btn.Size = UDim2.new(1,0,0,20)
+    btn.Size = UDim2.new(1,0,0,30)
     btn.Text = "..."
     btn.Font = Enum.Font.Gotham
-    btn.TextSize = 13
+    btn.TextSize = 16
     btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
     btn.TextColor3 = Color3.fromRGB(230,230,230)
 
-    Instance.new("UICorner",btn)
+    Instance.new("UICorner",btn).CornerRadius = UDim.new(0,8)
 
     table.insert(buttons,btn)
 
