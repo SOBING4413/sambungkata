@@ -166,7 +166,20 @@ end
 
 local function TypeWord(word,start)
 
-    for i=#start+1,#word do
+    start = string.lower(start or "")
+
+    -- cari panjang prefix yang cocok
+    local skip = 0
+
+    for i = 1, #start do
+        if string.sub(word,1,i) == string.sub(start,1,i) then
+            skip = i
+        else
+            break
+        end
+    end
+
+    for i = skip + 1, #word do
 
         local partial = string.sub(word,1,i)
 
