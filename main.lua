@@ -121,59 +121,40 @@ end
 
 task.spawn(function()
 
-	local urls = {
+	local text
 
-		-- wordlist kamu
-		"https://raw.githubusercontent.com/SOBING4413/sambungkata/main/dependescis/kbbi.txt",
+	local ok,res = pcall(function()
+		return game:HttpGet("https://raw.githubusercontent.com/SOBING4413/sambungkata/main/dependescis/kbbi.txt")
+	end)
 
-		-- wordlist indonesia besar
-		"https://raw.githubusercontent.com/words/an-array-of-indonesian-words/master/words.txt",
+	if ok then
+		text = res
+	else
+		warn("Failed load github wordlist")
+		return
+	end
 
-		-- frequency words indonesia
-		"https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/id/id_50k.txt"
+	for word in string.gmatch(text,"[^\r\n]+") do
 
-	}
+		local w = string.lower(word):gsub("%s","")
 
-	local Used = {}
+		if string.match(w,"^[a-z]+$") and #w >= 3 then
 
-	for _,url in ipairs(urls) do
+			local p1 = string.sub(w,1,1)
+			local p2 = string.sub(w,1,2)
 
-		local ok,res = pcall(function()
-			return game:HttpGet(url)
-		end)
+			Prefix1[p1] = Prefix1[p1] or {}
+			table.insert(Prefix1[p1],w)
 
-		if ok then
+			Prefix2[p2] = Prefix2[p2] or {}
+			table.insert(Prefix2[p2],w)
 
-			for word in string.gmatch(res,"[^\r\n]+") do
-
-				local w = string.lower(word):gsub("[^a-z]","")
-
-				if #w >= 3 and not Used[w] then
-
-					Used[w] = true
-
-					local p1 = string.sub(w,1,1)
-					local p2 = string.sub(w,1,2)
-
-					Prefix1[p1] = Prefix1[p1] or {}
-					table.insert(Prefix1[p1],w)
-
-					Prefix2[p2] = Prefix2[p2] or {}
-					table.insert(Prefix2[p2],w)
-
-				end
-
-			end
-
-		else
-			warn("Failed load:",url)
 		end
 
 	end
 
 	Ready = true
-
-	print("Wordlist loaded | total words:",table.getn(Used))
+	print("Wordlist loaded")
 
 end)
 
@@ -198,11 +179,10 @@ end
 
 local function FindOptions(prefix)
 
-	prefix = string.lower(prefix):gsub("%s","")
+	prefix = string.lower(prefix):gsub("[^a-z]","")
 
 	local list
 
-	-- ambil list sesuai prefix
 	if #prefix >= 2 then
 		list = Prefix2[string.sub(prefix,1,2)]
 	else
@@ -218,7 +198,6 @@ local function FindOptions(prefix)
 
 	for _,word in ipairs(list) do
 
-		-- STRICT PREFIX CHECK
 		if string.sub(word,1,#prefix) == prefix then
 
 			if not used[word] then
@@ -234,13 +213,6 @@ local function FindOptions(prefix)
 		return {}
 	end
 
-	-- shuffle
-	for i = #filtered,2,-1 do
-		local j = math.random(i)
-		filtered[i],filtered[j] = filtered[j],filtered[i]
-	end
-
-	-- sort difficulty
 	table.sort(filtered,function(a,b)
 		return Difficulty(a) < Difficulty(b)
 	end)
@@ -260,7 +232,9 @@ local function UpdatePreview()
 
 	Options = FindOptions(CurrentLetter)
 
-	if not Options then return end
+	if not Options or #Options == 0 then
+		return
+	end
 
 	prefixLabel.Text = "Awalan : "..CurrentLetter
 
@@ -305,7 +279,7 @@ MatchUI.OnClientEvent:Connect(function(event,data)
 
 	if event == "UpdateServerLetter" then
 
-		CurrentLetter = string.lower(tostring(data)):gsub("%s","")
+		CurrentLetter = string.lower(tostring(data)):gsub("[^a-z]","")
 
 		UpdatePreview()
 
