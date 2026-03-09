@@ -161,25 +161,15 @@ local function FindWord(prefix)
 end
 
 --------------------------------------------------
--- TYPE WORD
+-- TYPE WORD (ANTI DOUBLE)
 --------------------------------------------------
 
 local function TypeWord(word,start)
 
     start = string.lower(start or "")
+    local skip = #start
 
-    -- cari panjang prefix yang cocok
-    local skip = 0
-
-    for i = 1, #start do
-        if string.sub(word,1,i) == string.sub(start,1,i) then
-            skip = i
-        else
-            break
-        end
-    end
-
-    for i = skip + 1, #word do
+    for i = skip + 1,#word do
 
         local partial = string.sub(word,1,i)
 
@@ -197,17 +187,20 @@ end
 
 local function Answer()
 
-    if not Enabled or not CurrentLetter or Answered then return end
+    if not CurrentLetter then return end
     if not Ready then return end
 
-    Answered = true
-
     local word = FindWord(CurrentLetter)
-
     if not word then return end
 
+    -- preview selalu muncul
     label.Text = "Next Word : "..word
 
+    -- kalau OFF jangan jawab
+    if not Enabled then return end
+    if Answered then return end
+
+    Answered = true
     Used[word] = true
 
     task.wait(math.random(60,120)/100)
@@ -232,6 +225,9 @@ MatchUI.OnClientEvent:Connect(function(event,data)
         Answered = false
 
         print("Prefix:",CurrentLetter)
+
+        -- update preview langsung
+        Answer()
 
     elseif event == "StartTurn" then
 
