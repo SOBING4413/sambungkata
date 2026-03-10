@@ -9,7 +9,7 @@ local PlayerGui = player:WaitForChild("PlayerGui")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local MatchUI = Remotes:WaitForChild("MatchUI")
 
-local Dependencies = ReplicatedStorage:FindFirstChild("dependescis")
+local Dependencies = ReplicatedStorage:WaitForChild("dependescis")
 
 local Prefix1 = {}
 local Prefix2 = {}
@@ -68,7 +68,6 @@ scroll.Size = UDim2.new(1,-20,1,-90)
 scroll.Position = UDim2.new(0,10,0,80)
 scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 4
-scroll.CanvasSize = UDim2.new(0,0,0,0)
 
 local layout = Instance.new("UIListLayout")
 layout.Parent = scroll
@@ -97,14 +96,6 @@ local function CreateButton()
 	stroke.Parent = btn
 	stroke.Color = Color3.fromRGB(70,70,70)
 
-	btn.MouseEnter:Connect(function()
-		btn.BackgroundColor3 = Color3.fromRGB(45,45,45)
-	end)
-
-	btn.MouseLeave:Connect(function()
-		btn.BackgroundColor3 = Color3.fromRGB(32,32,32)
-	end)
-
 	table.insert(buttons,btn)
 
 end
@@ -114,7 +105,7 @@ for i = 1,30 do
 end
 
 --------------------------------------------------
--- WORD PROCESSOR
+-- WORD SYSTEM
 --------------------------------------------------
 
 local function AddWord(word)
@@ -137,38 +128,45 @@ local function AddWord(word)
 end
 
 --------------------------------------------------
--- LOAD WORDLIST
+-- LOAD DEPENDENCIS
 --------------------------------------------------
+
+local function LoadWords(data)
+
+	if typeof(data) ~= "table" then return end
+
+	for _,v in pairs(data) do
+
+		if typeof(v) == "string" then
+			AddWord(v)
+
+		elseif typeof(v) == "table" then
+			LoadWords(v)
+		end
+
+	end
+
+end
 
 task.spawn(function()
 
-	if not Dependencies then
-		warn("dependescis folder not found")
-		return
-	end
+	for _,file in ipairs(Dependencies:GetDescendants()) do
 
-	for _,file in ipairs(Dependencies:GetChildren()) do
+		if file:IsA("ModuleScript") then
 
-		if file:IsA("StringValue") then
+			local ok,data = pcall(require,file)
+			if ok then
+				LoadWords(data)
+			end
+
+		elseif file:IsA("StringValue") then
 
 			local ok,data = pcall(function()
 				return HttpService:JSONDecode(file.Value)
 			end)
 
-			if ok and typeof(data) == "table" then
-				for _,word in pairs(data) do
-					AddWord(word)
-				end
-			end
-
-		elseif file:IsA("ModuleScript") then
-
-			local ok,data = pcall(require,file)
-
-			if ok and typeof(data) == "table" then
-				for _,word in pairs(data) do
-					AddWord(word)
-				end
+			if ok then
+				LoadWords(data)
 			end
 
 		end
@@ -176,7 +174,7 @@ task.spawn(function()
 	end
 
 	Ready = true
-	print("Wordlist Loaded")
+	print("Wordlist Loaded:",#Prefix1)
 
 end)
 
