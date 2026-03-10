@@ -1,12 +1,15 @@
 local cloneref = cloneref or function(o) return o end
 local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
 local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local MatchUI = Remotes:WaitForChild("MatchUI")
+
+local Dependencies = ReplicatedStorage:WaitForChild("dependescis")
 
 local Prefix1 = {}
 local Prefix2 = {}
@@ -16,7 +19,7 @@ local Ready = false
 local Options = {}
 
 --------------------------------------------------
--- UI PREMIUM
+-- UI
 --------------------------------------------------
 
 local gui = Instance.new("ScreenGui",PlayerGui)
@@ -36,14 +39,6 @@ local stroke = Instance.new("UIStroke",frame)
 stroke.Color = Color3.fromRGB(70,70,70)
 stroke.Thickness = 1.2
 
-local grad = Instance.new("UIGradient",frame)
-grad.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0,Color3.fromRGB(35,35,35)),
-	ColorSequenceKeypoint.new(1,Color3.fromRGB(15,15,15))
-}
-grad.Rotation = 90
-
--- TITLE
 local title = Instance.new("TextLabel",frame)
 title.Size = UDim2.new(1,0,0,42)
 title.BackgroundTransparency = 1
@@ -52,7 +47,6 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 22
 title.TextColor3 = Color3.fromRGB(255,255,255)
 
--- PREFIX
 local prefixLabel = Instance.new("TextLabel",frame)
 prefixLabel.Size = UDim2.new(1,-20,0,26)
 prefixLabel.Position = UDim2.new(0,10,0,45)
@@ -63,13 +57,11 @@ prefixLabel.TextSize = 17
 prefixLabel.TextColor3 = Color3.fromRGB(180,180,180)
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- SCROLL LIST
 local scroll = Instance.new("ScrollingFrame",frame)
 scroll.Size = UDim2.new(1,-20,1,-90)
 scroll.Position = UDim2.new(0,10,0,80)
 scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 4
-scroll.CanvasSize = UDim2.new(0,0,0,0)
 
 local layout = Instance.new("UIListLayout",scroll)
 layout.Padding = UDim.new(0,6)
@@ -110,51 +102,63 @@ local function CreateButton()
 
 end
 
--- 30 opsi jawaban scroll
 for i=1,30 do
 	CreateButton()
 end
 
 --------------------------------------------------
--- LOAD WORDLIST
+-- WORD PROCESSOR
+--------------------------------------------------
+
+local function AddWord(w)
+
+	w = string.lower(w):gsub("%s","")
+
+	if string.match(w,"^[a-z]+$") and #w >= 3 then
+
+		local p1 = string.sub(w,1,1)
+		local p2 = string.sub(w,1,2)
+
+		Prefix1[p1] = Prefix1[p1] or {}
+		table.insert(Prefix1[p1],w)
+
+		Prefix2[p2] = Prefix2[p2] or {}
+		table.insert(Prefix2[p2],w)
+
+	end
+
+end
+
+--------------------------------------------------
+-- LOAD JSON WORDLIST
 --------------------------------------------------
 
 task.spawn(function()
 
-	local text
+	for _,file in ipairs(Dependencies:GetChildren()) do
 
-	local ok,res = pcall(function()
-		return game:HttpGet("https://raw.githubusercontent.com/SOBING4413/sambungkata/main/dependescis/kbbi.txt")
-	end)
+		if file:IsA("StringValue") then
 
-	if ok then
-		text = res
-	else
-		warn("Failed load github wordlist")
-		return
-	end
+			local ok,data = pcall(function()
+				return HttpService:JSONDecode(file.Value)
+			end)
 
-	for word in string.gmatch(text,"[^\r\n]+") do
+			if ok and typeof(data) == "table" then
 
-		local w = string.lower(word):gsub("%s","")
+				for _,word in pairs(data) do
+					if typeof(word) == "string" then
+						AddWord(word)
+					end
+				end
 
-		if string.match(w,"^[a-z]+$") and #w >= 3 then
-
-			local p1 = string.sub(w,1,1)
-			local p2 = string.sub(w,1,2)
-
-			Prefix1[p1] = Prefix1[p1] or {}
-			table.insert(Prefix1[p1],w)
-
-			Prefix2[p2] = Prefix2[p2] or {}
-			table.insert(Prefix2[p2],w)
+			end
 
 		end
 
 	end
 
 	Ready = true
-	print("Wordlist loaded")
+	print("Wordlist JSON loaded")
 
 end)
 
