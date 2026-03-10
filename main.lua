@@ -16,7 +16,7 @@ local Ready = false
 local Options = {}
 
 --------------------------------------------------
--- UI
+-- UI PREMIUM
 --------------------------------------------------
 
 local gui = Instance.new("ScreenGui",PlayerGui)
@@ -80,8 +80,9 @@ local buttons = {}
 local function CreateButton()
 
 	local btn = Instance.new("TextButton")
+
 	btn.Size = UDim2.new(1,0,0,34)
-	btn.Text = ""
+	btn.Text = "..."
 	btn.Font = Enum.Font.Gotham
 	btn.TextSize = 17
 	btn.TextColor3 = Color3.fromRGB(235,235,235)
@@ -162,8 +163,10 @@ local HardLetters = {
 }
 
 local function Difficulty(word)
+
 	local last = string.sub(word,-1)
 	return HardLetters[last] or 0
+
 end
 
 --------------------------------------------------
@@ -172,9 +175,11 @@ end
 
 local function FindOptions(prefix)
 
+	if not prefix then return {} end
+
 	prefix = string.lower(prefix):gsub("[^a-z]","")
 
-	if #prefix == 0 then
+	if prefix == "" then
 		return {}
 	end
 
@@ -182,9 +187,7 @@ local function FindOptions(prefix)
 
 	if #prefix >= 2 then
 		list = Prefix2[string.sub(prefix,1,2)]
-	end
-
-	if not list then
+	else
 		list = Prefix1[string.sub(prefix,1,1)]
 	end
 
@@ -196,10 +199,20 @@ local function FindOptions(prefix)
 	local used = {}
 
 	for _,word in ipairs(list) do
-		if not used[word] then
-			used[word] = true
-			table.insert(filtered,word)
+
+		if string.sub(word,1,#prefix) == prefix then
+
+			if not used[word] then
+				used[word] = true
+				table.insert(filtered,word)
+			end
+
 		end
+
+	end
+
+	if #filtered == 0 then
+		return {}
 	end
 
 	table.sort(filtered,function(a,b)
@@ -217,21 +230,24 @@ end
 local function UpdatePreview()
 
 	if not Ready then return end
-	if not CurrentLetter then return end
+	if not CurrentLetter or CurrentLetter == "" then return end
 
-	Options = FindOptions(CurrentLetter)
+	local result = FindOptions(CurrentLetter)
+
+	Options = result or {}
 
 	prefixLabel.Text = "Awalan : "..CurrentLetter
 
-	if not Options or #Options == 0 then
-		for _,btn in ipairs(buttons) do
-			btn.Text = ""
-		end
+	for i,btn in ipairs(buttons) do
+		btn.Text = ""
+	end
+
+	if #Options == 0 then
 		return
 	end
 
-	for i,btn in ipairs(buttons) do
-		btn.Text = Options[i] or ""
+	for i=1,math.min(#buttons,#Options) do
+		buttons[i].Text = Options[i]
 	end
 
 end
@@ -270,8 +286,6 @@ end
 MatchUI.OnClientEvent:Connect(function(event,data)
 
 	if event == "UpdateServerLetter" then
-
-		print("PREFIX SERVER:",data)
 
 		CurrentLetter = string.lower(tostring(data)):gsub("[^a-z]","")
 
