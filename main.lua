@@ -43,7 +43,6 @@ grad.Color = ColorSequence.new{
 }
 grad.Rotation = 90
 
--- TITLE
 local title = Instance.new("TextLabel",frame)
 title.Size = UDim2.new(1,0,0,42)
 title.BackgroundTransparency = 1
@@ -52,7 +51,6 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 22
 title.TextColor3 = Color3.fromRGB(255,255,255)
 
--- PREFIX
 local prefixLabel = Instance.new("TextLabel",frame)
 prefixLabel.Size = UDim2.new(1,-20,0,26)
 prefixLabel.Position = UDim2.new(0,10,0,45)
@@ -63,7 +61,6 @@ prefixLabel.TextSize = 17
 prefixLabel.TextColor3 = Color3.fromRGB(180,180,180)
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- SCROLL LIST
 local scroll = Instance.new("ScrollingFrame",frame)
 scroll.Size = UDim2.new(1,-20,1,-90)
 scroll.Position = UDim2.new(0,10,0,80)
@@ -110,7 +107,6 @@ local function CreateButton()
 
 end
 
--- 30 opsi jawaban scroll
 for i=1,30 do
 	CreateButton()
 end
@@ -179,7 +175,13 @@ end
 
 local function FindOptions(prefix)
 
+	if not prefix then return {} end
+
 	prefix = string.lower(prefix):gsub("[^a-z]","")
+
+	if prefix == "" then
+		return {}
+	end
 
 	local list
 
@@ -228,18 +230,24 @@ end
 local function UpdatePreview()
 
 	if not Ready then return end
-	if not CurrentLetter then return end
+	if not CurrentLetter or CurrentLetter == "" then return end
 
-	Options = FindOptions(CurrentLetter)
+	local result = FindOptions(CurrentLetter)
 
-	if not Options or #Options == 0 then
-		return
-	end
+	Options = result or {}
 
 	prefixLabel.Text = "Awalan : "..CurrentLetter
 
 	for i,btn in ipairs(buttons) do
-		btn.Text = Options[i] or ""
+		btn.Text = ""
+	end
+
+	if #Options == 0 then
+		return
+	end
+
+	for i=1,math.min(#buttons,#Options) do
+		buttons[i].Text = Options[i]
 	end
 
 end
