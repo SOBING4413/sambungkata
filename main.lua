@@ -9,7 +9,7 @@ local PlayerGui = player:WaitForChild("PlayerGui")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local MatchUI = Remotes:WaitForChild("MatchUI")
 
-local Dependencies = ReplicatedStorage:WaitForChild("dependescis")
+local Dependencies = ReplicatedStorage:FindFirstChild("dependescis")
 
 local Prefix1 = {}
 local Prefix2 = {}
@@ -22,10 +22,12 @@ local Options = {}
 -- UI
 --------------------------------------------------
 
-local gui = Instance.new("ScreenGui",PlayerGui)
+local gui = Instance.new("ScreenGui")
+gui.Parent = PlayerGui
 gui.ResetOnSpawn = false
 
-local frame = Instance.new("Frame",gui)
+local frame = Instance.new("Frame")
+frame.Parent = gui
 frame.Size = UDim2.new(0,360,0,320)
 frame.Position = UDim2.new(0,30,0.5,-160)
 frame.BackgroundColor3 = Color3.fromRGB(18,18,18)
@@ -35,11 +37,13 @@ frame.Draggable = true
 
 Instance.new("UICorner",frame).CornerRadius = UDim.new(0,14)
 
-local stroke = Instance.new("UIStroke",frame)
+local stroke = Instance.new("UIStroke")
+stroke.Parent = frame
 stroke.Color = Color3.fromRGB(70,70,70)
 stroke.Thickness = 1.2
 
-local title = Instance.new("TextLabel",frame)
+local title = Instance.new("TextLabel")
+title.Parent = frame
 title.Size = UDim2.new(1,0,0,42)
 title.BackgroundTransparency = 1
 title.Text = "KBBI | by.Sobing4413"
@@ -47,7 +51,8 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 22
 title.TextColor3 = Color3.fromRGB(255,255,255)
 
-local prefixLabel = Instance.new("TextLabel",frame)
+local prefixLabel = Instance.new("TextLabel")
+prefixLabel.Parent = frame
 prefixLabel.Size = UDim2.new(1,-20,0,26)
 prefixLabel.Position = UDim2.new(0,10,0,45)
 prefixLabel.BackgroundTransparency = 1
@@ -57,17 +62,20 @@ prefixLabel.TextSize = 17
 prefixLabel.TextColor3 = Color3.fromRGB(180,180,180)
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local scroll = Instance.new("ScrollingFrame",frame)
+local scroll = Instance.new("ScrollingFrame")
+scroll.Parent = frame
 scroll.Size = UDim2.new(1,-20,1,-90)
 scroll.Position = UDim2.new(0,10,0,80)
 scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 4
+scroll.CanvasSize = UDim2.new(0,0,0,0)
 
-local layout = Instance.new("UIListLayout",scroll)
+local layout = Instance.new("UIListLayout")
+layout.Parent = scroll
 layout.Padding = UDim.new(0,6)
 
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-	scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y+10)
+	scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
 end)
 
 local buttons = {}
@@ -75,20 +83,19 @@ local buttons = {}
 local function CreateButton()
 
 	local btn = Instance.new("TextButton")
-
+	btn.Parent = scroll
 	btn.Size = UDim2.new(1,0,0,34)
 	btn.Text = "..."
 	btn.Font = Enum.Font.Gotham
 	btn.TextSize = 17
 	btn.TextColor3 = Color3.fromRGB(235,235,235)
 	btn.BackgroundColor3 = Color3.fromRGB(32,32,32)
-	btn.Parent = scroll
 
 	Instance.new("UICorner",btn).CornerRadius = UDim.new(0,8)
 
-	local stroke = Instance.new("UIStroke",btn)
+	local stroke = Instance.new("UIStroke")
+	stroke.Parent = btn
 	stroke.Color = Color3.fromRGB(70,70,70)
-	stroke.Thickness = 1
 
 	btn.MouseEnter:Connect(function()
 		btn.BackgroundColor3 = Color3.fromRGB(45,45,45)
@@ -102,7 +109,7 @@ local function CreateButton()
 
 end
 
-for i=1,30 do
+for i = 1,30 do
 	CreateButton()
 end
 
@@ -110,30 +117,35 @@ end
 -- WORD PROCESSOR
 --------------------------------------------------
 
-local function AddWord(w)
+local function AddWord(word)
 
-	w = string.lower(w):gsub("%s","")
+	word = tostring(word):lower():gsub("%s","")
 
-	if string.match(w,"^[a-z]+$") and #w >= 3 then
+	if word:match("^[a-z]+$") and #word >= 3 then
 
-		local p1 = string.sub(w,1,1)
-		local p2 = string.sub(w,1,2)
+		local p1 = word:sub(1,1)
+		local p2 = word:sub(1,2)
 
 		Prefix1[p1] = Prefix1[p1] or {}
-		table.insert(Prefix1[p1],w)
+		table.insert(Prefix1[p1],word)
 
 		Prefix2[p2] = Prefix2[p2] or {}
-		table.insert(Prefix2[p2],w)
+		table.insert(Prefix2[p2],word)
 
 	end
 
 end
 
 --------------------------------------------------
--- LOAD JSON WORDLIST
+-- LOAD WORDLIST
 --------------------------------------------------
 
 task.spawn(function()
+
+	if not Dependencies then
+		warn("dependescis folder not found")
+		return
+	end
 
 	for _,file in ipairs(Dependencies:GetChildren()) do
 
@@ -144,13 +156,19 @@ task.spawn(function()
 			end)
 
 			if ok and typeof(data) == "table" then
-
 				for _,word in pairs(data) do
-					if typeof(word) == "string" then
-						AddWord(word)
-					end
+					AddWord(word)
 				end
+			end
 
+		elseif file:IsA("ModuleScript") then
+
+			local ok,data = pcall(require,file)
+
+			if ok and typeof(data) == "table" then
+				for _,word in pairs(data) do
+					AddWord(word)
+				end
 			end
 
 		end
@@ -158,7 +176,7 @@ task.spawn(function()
 	end
 
 	Ready = true
-	print("Wordlist JSON loaded")
+	print("Wordlist Loaded")
 
 end)
 
@@ -171,10 +189,7 @@ local HardLetters = {
 }
 
 local function Difficulty(word)
-
-	local last = string.sub(word,-1)
-	return HardLetters[last] or 0
-
+	return HardLetters[word:sub(-1)] or 0
 end
 
 --------------------------------------------------
@@ -183,14 +198,14 @@ end
 
 local function FindOptions(prefix)
 
-	prefix = string.lower(prefix):gsub("[^a-z]","")
+	prefix = tostring(prefix):lower():gsub("[^a-z]","")
 
 	local list
 
 	if #prefix >= 2 then
-		list = Prefix2[string.sub(prefix,1,2)]
+		list = Prefix2[prefix:sub(1,2)]
 	else
-		list = Prefix1[string.sub(prefix,1,1)]
+		list = Prefix1[prefix:sub(1,1)]
 	end
 
 	if not list then
@@ -202,19 +217,11 @@ local function FindOptions(prefix)
 
 	for _,word in ipairs(list) do
 
-		if string.sub(word,1,#prefix) == prefix then
-
-			if not used[word] then
-				used[word] = true
-				table.insert(filtered,word)
-			end
-
+		if word:sub(1,#prefix) == prefix and not used[word] then
+			used[word] = true
+			table.insert(filtered,word)
 		end
 
-	end
-
-	if #filtered == 0 then
-		return {}
 	end
 
 	table.sort(filtered,function(a,b)
@@ -231,14 +238,9 @@ end
 
 local function UpdatePreview()
 
-	if not Ready then return end
-	if not CurrentLetter then return end
+	if not Ready or not CurrentLetter then return end
 
 	Options = FindOptions(CurrentLetter)
-
-	if not Options or #Options == 0 then
-		return
-	end
 
 	prefixLabel.Text = "Awalan : "..CurrentLetter
 
@@ -283,8 +285,7 @@ MatchUI.OnClientEvent:Connect(function(event,data)
 
 	if event == "UpdateServerLetter" then
 
-		CurrentLetter = string.lower(tostring(data)):gsub("[^a-z]","")
-
+		CurrentLetter = tostring(data):lower():gsub("[^a-z]","")
 		UpdatePreview()
 
 	end
