@@ -9,7 +9,6 @@ local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local MatchUI = Remotes:WaitForChild("MatchUI")
 
 local Prefix1 = {}
-local Prefix2 = {}
 
 local CurrentLetter = nil
 local Ready = false
@@ -80,7 +79,6 @@ local buttons = {}
 local function CreateButton()
 
 	local btn = Instance.new("TextButton")
-
 	btn.Size = UDim2.new(1,0,0,34)
 	btn.Text = ""
 	btn.Font = Enum.Font.Gotham
@@ -137,13 +135,9 @@ task.spawn(function()
 		if string.match(w,"^[a-z]+$") and #w >= 3 then
 
 			local p1 = string.sub(w,1,1)
-			local p2 = string.sub(w,1,2)
 
 			Prefix1[p1] = Prefix1[p1] or {}
 			table.insert(Prefix1[p1],w)
-
-			Prefix2[p2] = Prefix2[p2] or {}
-			table.insert(Prefix2[p2],w)
 
 		end
 
@@ -175,18 +169,13 @@ local function FindOptions(prefix)
 
 	prefix = string.lower(prefix):gsub("[^a-z]","")
 
-	local list
-
-	if #prefix >= 2 then
-		list = Prefix2[string.sub(prefix,1,2)]
-
-		-- fallback ke prefix 1 huruf kalau tidak ada
-		if not list then
-			list = Prefix1[string.sub(prefix,1,1)]
-		end
-	else
-		list = Prefix1[string.sub(prefix,1,1)]
+	if #prefix == 0 then
+		return {}
 	end
+
+	local letter = string.sub(prefix,-1)
+
+	local list = Prefix1[letter]
 
 	if not list then
 		return {}
@@ -197,19 +186,11 @@ local function FindOptions(prefix)
 
 	for _,word in ipairs(list) do
 
-		if string.sub(word,1,#prefix) == prefix then
-
-			if not used[word] then
-				used[word] = true
-				table.insert(filtered,word)
-			end
-
+		if not used[word] then
+			used[word] = true
+			table.insert(filtered,word)
 		end
 
-	end
-
-	if #filtered == 0 then
-		return {}
 	end
 
 	table.sort(filtered,function(a,b)
@@ -280,6 +261,8 @@ end
 MatchUI.OnClientEvent:Connect(function(event,data)
 
 	if event == "UpdateServerLetter" then
+
+		print("PREFIX SERVER:",data)
 
 		CurrentLetter = string.lower(tostring(data)):gsub("[^a-z]","")
 
