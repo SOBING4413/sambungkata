@@ -120,7 +120,7 @@ task.spawn(function()
 	local text
 
 	local ok,res = pcall(function()
-		return game:HttpGet("https://raw.githubusercontent.com/SOBING4413/sambungkata/main/dependescis/kbbi.txt")
+		return game:HttpGet("https://raw.githubusercontent.com/SOBING4413/sambungkata/main/dependencies/kbbi.txt")
 	end)
 
 	if ok then
@@ -294,3 +294,4 @@ MatchUI.OnClientEvent:Connect(function(event,data)
 	end
 
 end)
+
