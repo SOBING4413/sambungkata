@@ -9,6 +9,7 @@ local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local MatchUI = Remotes:WaitForChild("MatchUI")
 
 local Prefix1 = {}
+local Prefix2 = {}
 
 local CurrentLetter = nil
 local Ready = false
@@ -135,9 +136,13 @@ task.spawn(function()
 		if string.match(w,"^[a-z]+$") and #w >= 3 then
 
 			local p1 = string.sub(w,1,1)
+			local p2 = string.sub(w,1,2)
 
 			Prefix1[p1] = Prefix1[p1] or {}
 			table.insert(Prefix1[p1],w)
+
+			Prefix2[p2] = Prefix2[p2] or {}
+			table.insert(Prefix2[p2],w)
 
 		end
 
@@ -173,9 +178,15 @@ local function FindOptions(prefix)
 		return {}
 	end
 
-	local letter = string.sub(prefix,-1)
+	local list
 
-	local list = Prefix1[letter]
+	if #prefix >= 2 then
+		list = Prefix2[string.sub(prefix,1,2)]
+	end
+
+	if not list then
+		list = Prefix1[string.sub(prefix,1,1)]
+	end
 
 	if not list then
 		return {}
@@ -185,12 +196,10 @@ local function FindOptions(prefix)
 	local used = {}
 
 	for _,word in ipairs(list) do
-
 		if not used[word] then
 			used[word] = true
 			table.insert(filtered,word)
 		end
-
 	end
 
 	table.sort(filtered,function(a,b)
