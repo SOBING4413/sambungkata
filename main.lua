@@ -16,7 +16,7 @@ local Ready = false
 local Options = {}
 
 --------------------------------------------------
--- UI PREMIUM
+-- UI
 --------------------------------------------------
 
 local gui = Instance.new("ScreenGui",PlayerGui)
@@ -43,7 +43,6 @@ grad.Color = ColorSequence.new{
 }
 grad.Rotation = 90
 
--- TITLE
 local title = Instance.new("TextLabel",frame)
 title.Size = UDim2.new(1,0,0,42)
 title.BackgroundTransparency = 1
@@ -52,7 +51,6 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 22
 title.TextColor3 = Color3.fromRGB(255,255,255)
 
--- PREFIX
 local prefixLabel = Instance.new("TextLabel",frame)
 prefixLabel.Size = UDim2.new(1,-20,0,26)
 prefixLabel.Position = UDim2.new(0,10,0,45)
@@ -63,7 +61,6 @@ prefixLabel.TextSize = 17
 prefixLabel.TextColor3 = Color3.fromRGB(180,180,180)
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- SCROLL LIST
 local scroll = Instance.new("ScrollingFrame",frame)
 scroll.Size = UDim2.new(1,-20,1,-90)
 scroll.Position = UDim2.new(0,10,0,80)
@@ -85,7 +82,7 @@ local function CreateButton()
 	local btn = Instance.new("TextButton")
 
 	btn.Size = UDim2.new(1,0,0,34)
-	btn.Text = "..."
+	btn.Text = ""
 	btn.Font = Enum.Font.Gotham
 	btn.TextSize = 17
 	btn.TextColor3 = Color3.fromRGB(235,235,235)
@@ -110,7 +107,6 @@ local function CreateButton()
 
 end
 
--- 30 opsi jawaban scroll
 for i=1,30 do
 	CreateButton()
 end
@@ -167,10 +163,8 @@ local HardLetters = {
 }
 
 local function Difficulty(word)
-
 	local last = string.sub(word,-1)
 	return HardLetters[last] or 0
-
 end
 
 --------------------------------------------------
@@ -185,6 +179,11 @@ local function FindOptions(prefix)
 
 	if #prefix >= 2 then
 		list = Prefix2[string.sub(prefix,1,2)]
+
+		-- fallback ke prefix 1 huruf kalau tidak ada
+		if not list then
+			list = Prefix1[string.sub(prefix,1,1)]
+		end
 	else
 		list = Prefix1[string.sub(prefix,1,1)]
 	end
@@ -232,11 +231,14 @@ local function UpdatePreview()
 
 	Options = FindOptions(CurrentLetter)
 
+	prefixLabel.Text = "Awalan : "..CurrentLetter
+
 	if not Options or #Options == 0 then
+		for _,btn in ipairs(buttons) do
+			btn.Text = ""
+		end
 		return
 	end
-
-	prefixLabel.Text = "Awalan : "..CurrentLetter
 
 	for i,btn in ipairs(buttons) do
 		btn.Text = Options[i] or ""
@@ -286,4 +288,3 @@ MatchUI.OnClientEvent:Connect(function(event,data)
 	end
 
 end)
-
