@@ -23,6 +23,29 @@ local ScriptActive = true
 -- Strategy data: how many words start with each letter (populated after load)
 local LetterWordCount = {}
 
+-- ============================================================
+-- KILLER LETTER CONFIG (OPTIMIZED)
+-- Huruf-huruf yang jadi "senjata mematikan" karena lawan
+-- akan sangat kesulitan mencari kata yang berawalan huruf ini.
+-- Skor lebih tinggi = lebih mematikan = ditaruh paling atas.
+-- ============================================================
+local KILLER_SCORE_OVERRIDE = {
+	x = 99999,  -- hampir tidak ada kata berawalan x
+	z = 95000,  -- sangat sedikit kata berawalan z
+	q = 90000,  -- sangat sedikit kata berawalan q
+	v = 70000,  -- sedikit kata berawalan v
+	f = 60000,  -- lumayan sedikit
+	w = 50000,  -- agak sedikit
+	y = 45000,  -- agak sedikit
+	j = 35000,  -- cukup sulit
+	k = 30000,  -- cukup sulit
+	g = 25000,  -- agak sulit
+	c = 22000,  -- agak sulit
+}
+
+-- Jumlah tombol ditambah dari 30 → 50 agar lebih banyak opsi muncul
+local MAX_BUTTONS = 50
+
 --------------------------------------------------
 -- TWEEN HELPER
 --------------------------------------------------
@@ -228,7 +251,6 @@ local function SendNotification(notifType, titleText, messageText, duration)
 	local notifColor = NotifColors[notifType] or Color3.fromRGB(55, 130, 240)
 	local notifIcon = NotifIcons[notifType] or "🔔"
 
-	-- Main notification frame
 	local notif = Instance.new("Frame", notifContainer)
 	notif.Name = "Notif_" .. notifOrderCounter
 	notif.Size = UDim2.new(0, 310, 0, 0)
@@ -241,13 +263,11 @@ local function SendNotification(notifType, titleText, messageText, duration)
 
 	Instance.new("UICorner", notif).CornerRadius = UDim.new(0, 12)
 
-	-- Outer stroke
 	local notifStroke = Instance.new("UIStroke", notif)
 	notifStroke.Color = notifColor
 	notifStroke.Thickness = 1.5
 	notifStroke.Transparency = 0.4
 
-	-- Inner gradient bg
 	local notifGrad = Instance.new("UIGradient", notif)
 	notifGrad.Color = ColorSequence.new{
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 24, 38)),
@@ -255,7 +275,6 @@ local function SendNotification(notifType, titleText, messageText, duration)
 	}
 	notifGrad.Rotation = 135
 
-	-- Accent bar on left
 	local accentBar = Instance.new("Frame", notif)
 	accentBar.Name = "AccentBar"
 	accentBar.Size = UDim2.new(0, 4, 1, -12)
@@ -265,7 +284,6 @@ local function SendNotification(notifType, titleText, messageText, duration)
 	accentBar.ZIndex = 203
 	Instance.new("UICorner", accentBar).CornerRadius = UDim.new(0, 3)
 
-	-- Glow effect behind accent bar
 	local accentGlow = Instance.new("Frame", notif)
 	accentGlow.Name = "AccentGlow"
 	accentGlow.Size = UDim2.new(0, 40, 1, 0)
@@ -282,7 +300,6 @@ local function SendNotification(notifType, titleText, messageText, duration)
 	}
 	glowGrad.Rotation = 0
 
-	-- Icon
 	local iconLabel = Instance.new("TextLabel", notif)
 	iconLabel.Name = "Icon"
 	iconLabel.Size = UDim2.new(0, 32, 0, 32)
@@ -297,7 +314,6 @@ local function SendNotification(notifType, titleText, messageText, duration)
 	iconLabel.ZIndex = 204
 	Instance.new("UICorner", iconLabel).CornerRadius = UDim.new(0, 8)
 
-	-- Title
 	local notifTitle = Instance.new("TextLabel", notif)
 	notifTitle.Name = "Title"
 	notifTitle.Size = UDim2.new(1, -100, 0, 18)
@@ -311,7 +327,6 @@ local function SendNotification(notifType, titleText, messageText, duration)
 	notifTitle.TextTruncate = Enum.TextTruncate.AtEnd
 	notifTitle.ZIndex = 204
 
-	-- Message
 	local notifMsg = Instance.new("TextLabel", notif)
 	notifMsg.Name = "Message"
 	notifMsg.Size = UDim2.new(1, -100, 0, 28)
@@ -326,7 +341,6 @@ local function SendNotification(notifType, titleText, messageText, duration)
 	notifMsg.TextYAlignment = Enum.TextYAlignment.Top
 	notifMsg.ZIndex = 204
 
-	-- Close button
 	local notifClose = Instance.new("TextButton", notif)
 	notifClose.Name = "CloseBtn"
 	notifClose.Size = UDim2.new(0, 24, 0, 24)
@@ -349,7 +363,6 @@ local function SendNotification(notifType, titleText, messageText, duration)
 		Tween(notifClose, {BackgroundTransparency = 0.92, TextColor3 = Color3.fromRGB(140, 140, 155)}, 0.15)
 	end)
 
-	-- Progress bar at bottom
 	local progressBar = Instance.new("Frame", notif)
 	progressBar.Name = "ProgressBar"
 	progressBar.Size = UDim2.new(1, -16, 0, 3)
@@ -367,13 +380,9 @@ local function SendNotification(notifType, titleText, messageText, duration)
 	progressFill.ZIndex = 204
 	Instance.new("UICorner", progressFill).CornerRadius = UDim.new(0, 2)
 
-	-- Animate in
 	Tween(notif, {Size = UDim2.new(0, 310, 0, 68)}, 0.35, Enum.EasingStyle.Back)
-
-	-- Progress bar countdown
 	Tween(progressFill, {Size = UDim2.new(0, 0, 1, 0)}, duration, Enum.EasingStyle.Linear)
 
-	-- Dismiss function
 	local dismissed = false
 	local function DismissNotif()
 		if dismissed then return end
@@ -385,8 +394,6 @@ local function SendNotification(notifType, titleText, messageText, duration)
 	end
 
 	notifClose.MouseButton1Click:Connect(DismissNotif)
-
-	-- Auto dismiss
 	task.delay(duration, function()
 		DismissNotif()
 	end)
@@ -405,7 +412,6 @@ loadScreen.BackgroundColor3 = Color3.fromRGB(8, 10, 20)
 loadScreen.BorderSizePixel = 0
 loadScreen.ZIndex = 100
 
--- Subtle gradient overlay
 local loadGrad = Instance.new("UIGradient", loadScreen)
 loadGrad.Color = ColorSequence.new{
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(12, 15, 30)),
@@ -414,7 +420,6 @@ loadGrad.Color = ColorSequence.new{
 }
 loadGrad.Rotation = 150
 
--- Particle dots background (decorative frames)
 for i = 1, 25 do
 	local dot = Instance.new("Frame", loadScreen)
 	dot.Name = "Particle_" .. i
@@ -426,7 +431,6 @@ for i = 1, 25 do
 	dot.BorderSizePixel = 0
 	dot.ZIndex = 101
 	Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
-	-- Floating animation
 	task.spawn(function()
 		while dot and dot.Parent do
 			local newY = dot.Position.Y.Scale + (math.random() - 0.5) * 0.08
@@ -442,7 +446,6 @@ for i = 1, 25 do
 	end)
 end
 
--- Center container
 local loadCenter = Instance.new("Frame", loadScreen)
 loadCenter.Name = "Center"
 loadCenter.Size = UDim2.new(0, 400, 0, 360)
@@ -670,7 +673,6 @@ loadSubtitle.TextSize = 16
 loadSubtitle.TextColor3 = Color3.fromRGB(55, 130, 240)
 loadSubtitle.ZIndex = 103
 
--- Loading bar
 local loadBarBg = Instance.new("Frame", loadCenter)
 loadBarBg.Name = "LoadBarBg"
 loadBarBg.Size = UDim2.new(0, 240, 0, 4)
@@ -740,7 +742,6 @@ end)
 --     MAIN UI (Hidden initially, shown after load)
 --================================================
 
--- Shadow behind main frame
 local shadow = Instance.new("ImageLabel", gui)
 shadow.Name = "Shadow"
 shadow.BackgroundTransparency = 1
@@ -753,7 +754,6 @@ shadow.Size = UDim2.new(0, 720 + 40, 0, 420 + 40)
 shadow.Position = UDim2.new(0.5, -380, 0.5, -230)
 shadow.ZIndex = 1
 
--- MAIN FRAME (Bigger, more professional)
 local frame = Instance.new("Frame", gui)
 frame.Name = "MainFrame"
 frame.Size = UDim2.new(0, 720, 0, 420)
@@ -780,7 +780,6 @@ mainGrad.Color = ColorSequence.new{
 }
 mainGrad.Rotation = 145
 
--- Sync shadow to frame position
 frame:GetPropertyChangedSignal("Position"):Connect(function()
 	shadow.Position = UDim2.new(
 		frame.Position.X.Scale,
@@ -791,7 +790,7 @@ frame:GetPropertyChangedSignal("Position"):Connect(function()
 end)
 
 --------------------------------------------------
--- TOP BAR (Professional with glassmorphism feel)
+-- TOP BAR
 --------------------------------------------------
 
 local topBar = Instance.new("Frame", frame)
@@ -813,7 +812,6 @@ topBarFill.BackgroundTransparency = 0.5
 topBarFill.BorderSizePixel = 0
 topBarFill.ZIndex = 5
 
--- Accent line under top bar (thicker, more visible)
 local accentLine = Instance.new("Frame", frame)
 accentLine.Name = "AccentLine"
 accentLine.Size = UDim2.new(1, 0, 0, 2)
@@ -835,7 +833,6 @@ accentGlowGrad.Transparency = NumberSequence.new{
 	NumberSequenceKeypoint.new(1, 0.9)
 }
 
--- Title icon (professional badge with glow)
 local titleIconGlow = Instance.new("Frame", topBar)
 titleIconGlow.Name = "TitleIconGlow"
 titleIconGlow.Size = UDim2.new(0, 38, 0, 38)
@@ -864,7 +861,6 @@ titleIconStroke.Color = CurrentTheme.accentLight
 titleIconStroke.Thickness = 1
 titleIconStroke.Transparency = 0.5
 
--- Title text
 local title = Instance.new("TextLabel", topBar)
 title.Name = "Title"
 title.Size = UDim2.new(0, 280, 0, 22)
@@ -877,13 +873,12 @@ title.TextColor3 = CurrentTheme.textPrimary
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.ZIndex = 6
 
--- Subtitle
 local subtitle = Instance.new("TextLabel", topBar)
 subtitle.Name = "Subtitle"
 subtitle.Size = UDim2.new(0, 280, 0, 14)
 subtitle.Position = UDim2.new(0, 52, 0, 28)
 subtitle.BackgroundTransparency = 1
-subtitle.Text = "by.Sobing4413 • v2 Strategy"
+subtitle.Text = "by.Sobing4413 • v2 Strategy+"
 subtitle.Font = Enum.Font.Gotham
 subtitle.TextSize = 10
 subtitle.TextColor3 = CurrentTheme.textMuted
@@ -891,7 +886,7 @@ subtitle.TextXAlignment = Enum.TextXAlignment.Left
 subtitle.ZIndex = 6
 
 --------------------------------------------------
--- WINDOW CONTROL BUTTONS (More polished)
+-- WINDOW CONTROL BUTTONS
 --------------------------------------------------
 
 local function CreateControlBtn(name, text, hoverColor, posX, textSz)
@@ -925,7 +920,6 @@ local themeBtn = CreateControlBtn("ThemeBtn", "◆", CurrentTheme.accent, -114, 
 local sortBtn = CreateControlBtn("SortBtn", "🧠", Color3.fromRGB(180, 120, 255), -150, 12)
 local unloadBtn = CreateControlBtn("UnloadBtn", "⏏", Color3.fromRGB(180, 100, 50), -186, 13)
 
--- Close action
 closeBtn.MouseButton1Click:Connect(function()
 	SendNotification("info", "Menutup GUI", "KBBI sedang ditutup...", 2)
 	task.wait(0.3)
@@ -935,7 +929,6 @@ closeBtn.MouseButton1Click:Connect(function()
 	gui:Destroy()
 end)
 
--- Minimize action
 local OriginalSize = frame.Size
 local OriginalShadowSize = shadow.Size
 
@@ -953,7 +946,6 @@ minimizeBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- ============ SORT MODE TOGGLE ============
 -- Forward declare UpdatePreview
 local UpdatePreview
 
@@ -963,28 +955,25 @@ sortBtn.MouseButton1Click:Connect(function()
 		SendNotification("info", "Mode: Difficulty", "Urutan berdasarkan tingkat kesulitan huruf akhir (lama).", 2.5)
 	else
 		SortMode = "strategy"
-		SendNotification("strategy", "Mode: Strategy 🧠", "Urutan cerdas! Kata dengan akhiran mematikan (x,z,q) di atas. Musuh bakal stuck!", 3.5)
+		SendNotification("strategy", "Mode: Strategy+ 🧠", "Kata akhiran x/z/q/v/f di PALING ATAS! Banyak opsi killer muncul. Musuh bakal stuck!", 3.5)
 	end
 	if UpdatePreview then UpdatePreview() end
 end)
 
--- ============ UNLOAD SCRIPT BUTTON ============
 unloadBtn.MouseButton1Click:Connect(function()
 	if not ScriptActive then return end
 	ScriptActive = false
 	SendNotification("unloaded", "Script Di-unload", "KBBI telah di-unload. GUI akan ditutup.", 3)
 	task.wait(1)
-	-- Animate out
 	Tween(frame, {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In)
 	Tween(shadow, {ImageTransparency = 1}, 0.4)
 	task.wait(0.6)
-	-- Clean up everything
 	gui:Destroy()
 	print("[KBBI v2] Script unloaded by user.")
 end)
 
 --------------------------------------------------
--- THEME SELECTOR PANEL (Professional dropdown)
+-- THEME SELECTOR PANEL
 --------------------------------------------------
 
 local themePanel = Instance.new("Frame", gui)
@@ -1002,7 +991,6 @@ local themePanelStroke = Instance.new("UIStroke", themePanel)
 themePanelStroke.Color = Color3.fromRGB(45, 48, 60)
 themePanelStroke.Thickness = 1
 
--- Theme panel header
 local themePanelHeader = Instance.new("TextLabel", themePanel)
 themePanelHeader.Name = "Header"
 themePanelHeader.Size = UDim2.new(1, -16, 0, 24)
@@ -1015,10 +1003,8 @@ themePanelHeader.TextColor3 = Color3.fromRGB(150, 155, 175)
 themePanelHeader.TextXAlignment = Enum.TextXAlignment.Left
 themePanelHeader.ZIndex = 51
 
--- All UI elements that need theme updates
 local ThemeElements = {}
 
--- Forward declarations
 local scroll, prefixLabel, statusLabel, countLabel, strategyLabel, dangerLabel
 
 local function ApplyTheme(themeName)
@@ -1055,7 +1041,6 @@ local function ApplyTheme(themeName)
 	SendNotification("info", "Tema Diubah", "Tema berhasil diubah ke " .. themeName .. ".", 2.5)
 end
 
--- Create theme option buttons
 local themeOrder = {"Merah", "Hijau", "Biru", "Ungu", "Abu-abu"}
 local themeIcons = {
 	Merah = "🔴",
@@ -1087,7 +1072,6 @@ for idx, name in ipairs(themeOrder) do
 	colorDot.ZIndex = 52
 	Instance.new("UICorner", colorDot).CornerRadius = UDim.new(1, 0)
 
-	-- Dot glow
 	local dotGlow = Instance.new("UIStroke", colorDot)
 	dotGlow.Color = theme.accent
 	dotGlow.Thickness = 2
@@ -1153,7 +1137,7 @@ themeBtn.MouseButton1Click:Connect(function()
 end)
 
 --------------------------------------------------
--- LEFT PANEL (Professional Info Panel)
+-- LEFT PANEL
 --------------------------------------------------
 
 local leftPanel = Instance.new("Frame", frame)
@@ -1171,7 +1155,6 @@ leftStroke.Color = Color3.fromRGB(35, 38, 48)
 leftStroke.Thickness = 1
 leftStroke.Transparency = 0.2
 
--- Inner glow gradient for left panel
 local leftPanelGrad = Instance.new("UIGradient", leftPanel)
 leftPanelGrad.Color = ColorSequence.new{
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 22, 35)),
@@ -1179,7 +1162,7 @@ leftPanelGrad.Color = ColorSequence.new{
 }
 leftPanelGrad.Rotation = 160
 
--- Section: Current Prefix (bigger, more prominent)
+-- Section: Current Prefix
 local prefixSection = Instance.new("Frame", leftPanel)
 prefixSection.Name = "PrefixSection"
 prefixSection.Size = UDim2.new(1, -16, 0, 90)
@@ -1224,7 +1207,6 @@ prefixLabel.TextColor3 = CurrentTheme.accent
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
 prefixLabel.ZIndex = 5
 
--- Danger indicator (shows when few options)
 dangerLabel = Instance.new("TextLabel", prefixSection)
 dangerLabel.Name = "DangerLabel"
 dangerLabel.Size = UDim2.new(0, 90, 0, 20)
@@ -1240,14 +1222,13 @@ dangerLabel.ZIndex = 6
 dangerLabel.Visible = false
 Instance.new("UICorner", dangerLabel).CornerRadius = UDim.new(0, 6)
 
--- Strategy info label
 strategyLabel = Instance.new("TextLabel", prefixSection)
 strategyLabel.Name = "StrategyLabel"
 strategyLabel.Size = UDim2.new(0, 90, 0, 18)
 strategyLabel.Position = UDim2.new(1, -98, 0, 56)
 strategyLabel.BackgroundColor3 = Color3.fromRGB(180, 120, 255)
 strategyLabel.BackgroundTransparency = 0.8
-strategyLabel.Text = "🧠 STRATEGY"
+strategyLabel.Text = "🧠 STRATEGY+"
 strategyLabel.Font = Enum.Font.GothamBold
 strategyLabel.TextSize = 8
 strategyLabel.TextColor3 = Color3.fromRGB(200, 160, 255)
@@ -1295,7 +1276,6 @@ countLabel.TextTransparency = 0.1
 countLabel.TextXAlignment = Enum.TextXAlignment.Left
 countLabel.ZIndex = 5
 
--- Divider
 local divider = Instance.new("Frame", leftPanel)
 divider.Size = UDim2.new(1, -24, 0, 1)
 divider.Position = UDim2.new(0, 12, 0, 164)
@@ -1303,7 +1283,6 @@ divider.BackgroundColor3 = Color3.fromRGB(40, 42, 52)
 divider.BorderSizePixel = 0
 divider.ZIndex = 4
 
--- Tips section
 local tipsHeader = Instance.new("TextLabel", leftPanel)
 tipsHeader.Size = UDim2.new(1, -16, 0, 16)
 tipsHeader.Position = UDim2.new(0, 10, 0, 172)
@@ -1317,10 +1296,11 @@ tipsHeader.ZIndex = 4
 
 local tips = {
 	"Klik kata → auto input",
-	"🧠 = strategi cerdas ON",
-	"💀 = akhiran mematikan",
+	"🧠 = strategi+ cerdas ON",
+	"💀 = akhiran x/z/q (KILLER)",
+	"⚠️ = akhiran v/f/w (BAHAYA)",
 	"🟢 = akhiran aman",
-	"⚠️ = sedikit pilihan",
+	"Banyak opsi killer muncul!",
 	"◆ Ganti tema, ⏏ Unload",
 }
 
@@ -1338,7 +1318,6 @@ for i, tip in ipairs(tips) do
 	tipLabel.ZIndex = 4
 end
 
--- Version badge at bottom (more polished)
 local versionBadge = Instance.new("Frame", leftPanel)
 versionBadge.Size = UDim2.new(1, -16, 0, 28)
 versionBadge.Position = UDim2.new(0, 8, 1, -34)
@@ -1355,14 +1334,14 @@ versionStroke.Transparency = 0.5
 local versionText = Instance.new("TextLabel", versionBadge)
 versionText.Size = UDim2.new(1, 0, 1, 0)
 versionText.BackgroundTransparency = 1
-versionText.Text = "⚡ v2 • KBBI"
+versionText.Text = "⚡ v2 Strategy+ • KBBI"
 versionText.Font = Enum.Font.GothamMedium
 versionText.TextSize = 10
 versionText.TextColor3 = CurrentTheme.textMuted
 versionText.ZIndex = 5
 
 --------------------------------------------------
--- RIGHT PANEL (Word List - Enhanced)
+-- RIGHT PANEL (Word List)
 --------------------------------------------------
 
 local rightPanel = Instance.new("Frame", frame)
@@ -1373,7 +1352,6 @@ rightPanel.BackgroundTransparency = 1
 rightPanel.BorderSizePixel = 0
 rightPanel.ZIndex = 3
 
--- Header bar (more polished)
 local headerBar = Instance.new("Frame", rightPanel)
 headerBar.Name = "HeaderBar"
 headerBar.Size = UDim2.new(1, -4, 0, 30)
@@ -1393,14 +1371,13 @@ local headerLabel = Instance.new("TextLabel", headerBar)
 headerLabel.Size = UDim2.new(1, -12, 1, 0)
 headerLabel.Position = UDim2.new(0, 12, 0, 0)
 headerLabel.BackgroundTransparency = 1
-headerLabel.Text = "📋 DAFTAR KATA • 💀=killer 🟢=aman"
+headerLabel.Text = "📋 DAFTAR KATA • 💀=killer ⚠️=bahaya 🟢=aman"
 headerLabel.Font = Enum.Font.GothamBlack
 headerLabel.TextSize = 10
 headerLabel.TextColor3 = CurrentTheme.textMuted
 headerLabel.TextXAlignment = Enum.TextXAlignment.Left
 headerLabel.ZIndex = 5
 
--- Scroll list
 scroll = Instance.new("ScrollingFrame", rightPanel)
 scroll.Name = "WordScroll"
 scroll.Size = UDim2.new(1, -2, 1, -36)
@@ -1420,11 +1397,11 @@ scrollLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 --------------------------------------------------
--- WORD BUTTONS (Professional style - Enhanced with strategy indicators)
+-- WORD BUTTONS (50 buttons instead of 30)
 --------------------------------------------------
 
 local buttons = {}
-local buttonIndicators = {} -- strategy indicator labels
+local buttonIndicators = {}
 
 local function CreateButton(index)
 	local btn = Instance.new("TextButton")
@@ -1451,11 +1428,11 @@ local function CreateButton(index)
 	btnStroke.Thickness = 1
 	btnStroke.Transparency = 0.5
 
-	-- Strategy indicator (right side - shows ending letter danger level)
+	-- Strategy indicator (right side)
 	local indicator = Instance.new("TextLabel", btn)
 	indicator.Name = "Indicator"
-	indicator.Size = UDim2.new(0, 60, 0, 18)
-	indicator.Position = UDim2.new(1, -90, 0.5, -9)
+	indicator.Size = UDim2.new(0, 70, 0, 18)
+	indicator.Position = UDim2.new(1, -100, 0.5, -9)
 	indicator.BackgroundColor3 = Color3.fromRGB(40, 200, 100)
 	indicator.BackgroundTransparency = 0.75
 	indicator.Text = ""
@@ -1467,7 +1444,7 @@ local function CreateButton(index)
 	indicator.Visible = false
 	Instance.new("UICorner", indicator).CornerRadius = UDim.new(0, 5)
 
-	-- Number badge (more polished)
+	-- Number badge
 	local badge = Instance.new("TextLabel", btn)
 	badge.Name = "Badge"
 	badge.Size = UDim2.new(0, 22, 0, 18)
@@ -1483,7 +1460,6 @@ local function CreateButton(index)
 	badge.ZIndex = 6
 	Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 5)
 
-	-- Hover effects
 	btn.MouseEnter:Connect(function()
 		Tween(btn, {BackgroundColor3 = CurrentTheme.cardHover}, 0.12)
 		Tween(btnStroke, {Color = CurrentTheme.accentLight, Transparency = 0.15}, 0.12)
@@ -1502,12 +1478,13 @@ local function CreateButton(index)
 	table.insert(ThemeElements, {type = "button", obj = btn, index = index})
 end
 
-for i = 1, 30 do
+-- CREATE 50 BUTTONS (was 30)
+for i = 1, MAX_BUTTONS do
 	CreateButton(i)
 end
 
 --------------------------------------------------
--- LOAD WORDLIST (From KBBI.txt only)
+-- LOAD WORDLIST
 --------------------------------------------------
 
 task.spawn(function()
@@ -1559,7 +1536,7 @@ task.spawn(function()
 		LetterWordCount[ch] = Prefix1[ch] and #Prefix1[ch] or 0
 	end
 
-	SetLoadProgress(0.8, "Mengindeks " .. wordCount .. " kata + strategi...")
+	SetLoadProgress(0.8, "Mengindeks " .. wordCount .. " kata + strategi+...")
 	task.wait(0.4)
 
 	SetLoadProgress(1.0, "Selesai! Memuat antarmuka...")
@@ -1587,7 +1564,6 @@ task.spawn(function()
 	Tween(loadScreen, {BackgroundTransparency = 1}, 0.5)
 	task.wait(0.2)
 
-	-- Show main frame
 	frame.Visible = true
 	frame.Size = UDim2.new(0, 0, 0, 0)
 	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -1599,8 +1575,7 @@ task.spawn(function()
 	task.wait(0.6)
 	loadScreen:Destroy()
 
-	-- Send loaded notification
-	SendNotification("loaded", "Script Berhasil Dimuat!", "KBBI v2 Strategy siap. " .. wordCount .. " kata tersedia.", 4)
+	SendNotification("loaded", "Script Berhasil Dimuat!", "KBBI v2 Strategy+ siap. " .. wordCount .. " kata tersedia. 50 opsi per halaman!", 4)
 
 	-- Print letter stats for debug
 	local deadLetters = {}
@@ -1615,45 +1590,66 @@ task.spawn(function()
 		SendNotification("strategy", "Huruf Mematikan 💀", "Huruf dengan sedikit kata: " .. table.concat(deadLetters, ", "), 6)
 	end
 
-	print("[KBBI v2] Loaded " .. wordCount .. " words with strategy engine!")
+	print("[KBBI v2] Loaded " .. wordCount .. " words with Strategy+ engine!")
 end)
 
 --------------------------------------------------
--- STRATEGY ENGINE
--- Sorts words so that words ending in "killer letters"
--- (letters with few starting words) appear FIRST.
--- This way you trap the opponent!
+-- STRATEGY+ ENGINE (OPTIMIZED)
+--
+-- Sorting priorities for Strategy mode:
+-- 1. KILLER_SCORE_OVERRIDE: manual boost for x, z, q, v, f, w, y, etc.
+-- 2. Dynamic score: 10000 - LetterWordCount[lastChar]
+-- 3. Final score = max(override, dynamic) so killer letters ALWAYS on top
+-- 4. Tiebreaker: shorter words first (faster to type)
+--
+-- This ensures ALL words ending in x/z/q appear at the very top,
+-- not just 1, but ALL of them grouped together.
 --------------------------------------------------
 
--- Get how dangerous a word's ending letter is for the OPPONENT
--- Higher = more dangerous for opponent (fewer words start with that letter)
-local function GetEndingDanger(word)
+local function GetEndingDangerScore(word)
 	local lastChar = string.sub(word, -1)
 	local opponentOptions = LetterWordCount[lastChar] or 0
-	-- Invert: fewer options = higher danger score
-	if opponentOptions == 0 then return 99999 end
-	return 10000 - opponentOptions
+
+	-- Check manual override first (for guaranteed killer letters)
+	local overrideScore = KILLER_SCORE_OVERRIDE[lastChar] or 0
+
+	-- Dynamic score based on actual word count
+	local dynamicScore = 0
+	if opponentOptions == 0 then
+		dynamicScore = 99999
+	else
+		dynamicScore = 10000 - opponentOptions
+	end
+
+	-- Return the HIGHER of the two, ensuring killer letters always win
+	return math.max(overrideScore, dynamicScore)
 end
 
--- Get danger level category for display
+-- Get danger level category for display (ENHANCED with more tiers)
 local function GetDangerCategory(word)
 	local lastChar = string.sub(word, -1)
 	local cnt = LetterWordCount[lastChar] or 0
-	if cnt <= 3 then
-		return "killer", "💀 KILLER", Color3.fromRGB(255, 40, 40) -- almost no options
-	elseif cnt <= 10 then
-		return "danger", "⚠️ BAHAYA", Color3.fromRGB(255, 150, 30) -- very few
-	elseif cnt <= 30 then
-		return "risky", "🟡 RISKY", Color3.fromRGB(240, 220, 40) -- somewhat risky
+
+	-- Check if it's a manually-defined killer letter
+	local isKillerOverride = KILLER_SCORE_OVERRIDE[lastChar] and KILLER_SCORE_OVERRIDE[lastChar] >= 70000
+
+	if cnt == 0 then
+		return "impossible", "☠️ IMPOSSIBLE", Color3.fromRGB(255, 0, 0)
+	elseif cnt <= 3 or isKillerOverride then
+		return "killer", "💀 KILLER", Color3.fromRGB(255, 40, 40)
+	elseif cnt <= 10 or (KILLER_SCORE_OVERRIDE[lastChar] and KILLER_SCORE_OVERRIDE[lastChar] >= 40000) then
+		return "danger", "⚠️ BAHAYA", Color3.fromRGB(255, 150, 30)
+	elseif cnt <= 30 or (KILLER_SCORE_OVERRIDE[lastChar] and KILLER_SCORE_OVERRIDE[lastChar] >= 20000) then
+		return "risky", "🟡 RISKY", Color3.fromRGB(240, 220, 40)
 	elseif cnt <= 100 then
-		return "normal", "🔵 NORMAL", Color3.fromRGB(100, 160, 240) -- normal
+		return "normal", "🔵 NORMAL", Color3.fromRGB(100, 160, 240)
 	else
-		return "safe", "🟢 AMAN", Color3.fromRGB(40, 200, 100) -- safe for opponent
+		return "safe", "🟢 AMAN", Color3.fromRGB(40, 200, 100)
 	end
 end
 
 --------------------------------------------------
--- LETTER DIFFICULTY (old mode)
+-- LETTER DIFFICULTY (old mode, unchanged)
 --------------------------------------------------
 
 local HardLetters = {
@@ -1666,7 +1662,7 @@ local function Difficulty(word)
 end
 
 --------------------------------------------------
--- FIND OPTIONS
+-- FIND OPTIONS (OPTIMIZED)
 --------------------------------------------------
 
 local function FindOptions(prefix)
@@ -1697,20 +1693,40 @@ local function FindOptions(prefix)
 
 	-- Sort based on current mode
 	if SortMode == "strategy" then
-		-- Strategy mode: words that TRAP the opponent go first
-		-- (ending in letters with fewest starting words)
+		-- ============================================================
+		-- STRATEGY+ SORT (OPTIMIZED)
+		-- 
+		-- Priority order:
+		-- 1. Words ending in x, z, q (KILLER_SCORE >= 90000) → PALING ATAS
+		-- 2. Words ending in v, f (KILLER_SCORE >= 60000) → ATAS
+		-- 3. Words ending in w, y (KILLER_SCORE >= 40000) → MENENGAH ATAS
+		-- 4. Words ending in rare letters (dynamic low count) → MENENGAH
+		-- 5. Words ending in common letters → BAWAH
+		--
+		-- ALL words with killer endings show up, not just 1!
+		-- ============================================================
 		table.sort(filtered, function(a, b)
-			local dangerA = GetEndingDanger(a)
-			local dangerB = GetEndingDanger(b)
-			if dangerA ~= dangerB then
-				return dangerA > dangerB -- higher danger first
+			local scoreA = GetEndingDangerScore(a)
+			local scoreB = GetEndingDangerScore(b)
+			if scoreA ~= scoreB then
+				return scoreA > scoreB -- higher danger = higher position
 			end
-			return #a < #b -- shorter words first as tiebreaker
+			-- Tiebreaker 1: shorter words first (faster to type in game)
+			if #a ~= #b then
+				return #a < #b
+			end
+			-- Tiebreaker 2: alphabetical
+			return a < b
 		end)
 	else
-		-- Old difficulty mode
+		-- Old difficulty mode (reversed to put hard at top too)
 		table.sort(filtered, function(a, b)
-			return Difficulty(a) < Difficulty(b)
+			local diffA = Difficulty(a)
+			local diffB = Difficulty(b)
+			if diffA ~= diffB then
+				return diffA > diffB -- hard letters at top
+			end
+			return #a < #b
 		end)
 	end
 
@@ -1718,7 +1734,7 @@ local function FindOptions(prefix)
 end
 
 --------------------------------------------------
--- UPDATE UI
+-- UPDATE UI (OPTIMIZED)
 --------------------------------------------------
 
 UpdatePreview = function()
@@ -1729,7 +1745,7 @@ UpdatePreview = function()
 
 	-- Update strategy label
 	if SortMode == "strategy" then
-		strategyLabel.Text = "🧠 STRATEGY"
+		strategyLabel.Text = "🧠 STRATEGY+"
 		strategyLabel.TextColor3 = Color3.fromRGB(200, 160, 255)
 		strategyLabel.BackgroundColor3 = Color3.fromRGB(180, 120, 255)
 	else
@@ -1743,7 +1759,6 @@ UpdatePreview = function()
 		countLabel.Text = "Kata ditemukan: 0"
 		statusLabel.Text = "⚠️ Tidak ada kata"
 
-		-- Show DANGER alert
 		dangerLabel.Visible = true
 		dangerLabel.Text = "💀 MATI!"
 		dangerLabel.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
@@ -1763,7 +1778,18 @@ UpdatePreview = function()
 
 	prefixLabel.Text = CurrentLetter:upper()
 	countLabel.Text = "Kata ditemukan: " .. #Options
-	statusLabel.Text = "✅ " .. math.min(#Options, 30) .. "/" .. #Options .. " ditampilkan"
+	statusLabel.Text = "✅ " .. math.min(#Options, MAX_BUTTONS) .. "/" .. #Options .. " ditampilkan"
+
+	-- Count killer words at top for notification
+	local killerCount = 0
+	for i = 1, math.min(#Options, MAX_BUTTONS) do
+		local lastChar = string.sub(Options[i], -1)
+		local score = KILLER_SCORE_OVERRIDE[lastChar] or 0
+		local cnt = LetterWordCount[lastChar] or 0
+		if score >= 60000 or cnt <= 3 then
+			killerCount = killerCount + 1
+		end
+	end
 
 	-- Danger indicator based on option count
 	if #Options <= 3 then
@@ -1781,6 +1807,11 @@ UpdatePreview = function()
 		dangerLabel.Visible = false
 	end
 
+	-- Show killer count notification in strategy mode
+	if SortMode == "strategy" and killerCount > 0 then
+		SendNotification("strategy", "🧠 " .. killerCount .. " Kata Killer Ditemukan!", "Kata dengan akhiran mematikan (x/z/q/v/f) ditaruh paling atas. Gunakan untuk menjebak lawan!", 4)
+	end
+
 	for i, btn in ipairs(buttons) do
 		local ind = buttonIndicators[i]
 		if Options[i] then
@@ -1796,10 +1827,25 @@ UpdatePreview = function()
 				ind.TextColor3 = Color3.fromRGB(255, 255, 255)
 				ind.Visible = true
 			else
-				ind.Visible = false
+				-- Also show in difficulty mode
+				local lastChar = string.sub(Options[i], -1)
+				local diff = HardLetters[lastChar]
+				if diff and diff >= 6 then
+					ind.Text = "💀 HARD"
+					ind.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+					ind.TextColor3 = Color3.fromRGB(255, 255, 255)
+					ind.Visible = true
+				elseif diff and diff >= 3 then
+					ind.Text = "⚠️ MED"
+					ind.BackgroundColor3 = Color3.fromRGB(240, 180, 40)
+					ind.TextColor3 = Color3.fromRGB(255, 255, 255)
+					ind.Visible = true
+				else
+					ind.Visible = false
+				end
 			end
 
-			task.delay(i * 0.015, function()
+			task.delay(i * 0.012, function()
 				Tween(btn, {BackgroundTransparency = 0}, 0.2)
 			end)
 		else
@@ -1819,7 +1865,7 @@ for i, btn in ipairs(buttons) do
 		local word = Options[i]
 		if not word then return end
 
-		-- Professional click feedback
+		-- Click feedback
 		local origColor = btn.BackgroundColor3
 		Tween(btn, {BackgroundColor3 = CurrentTheme.accent}, 0.08)
 		task.delay(0.12, function()
@@ -1839,6 +1885,8 @@ for i, btn in ipairs(buttons) do
 				input.Text = word
 				if SortMode == "strategy" and opponentCount <= 5 then
 					SendNotification("strategy", "Serangan Mematikan! 💀", strategyMsg, 3.5)
+				elseif SortMode == "strategy" and opponentCount <= 15 then
+					SendNotification("warning", "Serangan Kuat! ⚠️", strategyMsg, 3)
 				else
 					SendNotification("success", "Kata Dipilih", strategyMsg, 2.5)
 				end
@@ -1848,7 +1896,7 @@ for i, btn in ipairs(buttons) do
 end
 
 --------------------------------------------------
--- EVENTS (with notifications)
+-- EVENTS
 --------------------------------------------------
 
 MatchUI.OnClientEvent:Connect(function(event, data)
@@ -1884,4 +1932,5 @@ task.spawn(function()
 	end
 end)
 
-print("[KBBI v2] Script initialized with Strategy Engine! Theme: " .. CurrentThemeName)
+print("[KBBI v2] Script initialized with Strategy+ Engine! Theme: " .. CurrentThemeName)
+print("[KBBI v2] Optimizations: 50 buttons, killer letters prioritized, multi-tier sorting")
